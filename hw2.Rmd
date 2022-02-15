@@ -2,6 +2,8 @@
 knitr::opts_chunk$set(echo=TRUE, eval=FALSE)
 ```
 
+Stats is pooopy
+
 # Homework 2 {-}
 
 <center>
