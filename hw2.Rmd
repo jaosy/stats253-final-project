@@ -43,15 +43,41 @@ Alternatively, you may knit your Rmd directly to PDF if you have LaTeX installed
 
 3. Made some initial progress on visualizing and cleaning the data
   + Choose one quantitative outcome variable for regression
-  Number of confirmed cases
+  
+    Number of confirmed cases, `total_cases`
   
   + Focus on a subset of about 10-20 predictor variables for now
   
-  
+    -   `location`
+    -   `continent`
+    -   `date`
+    -   `population_density` 
+    -   `total_deaths`
+    -   `reproduction_rate`
+    -   `people_vaccinated_per_hundred`
+    -   `people_fully_vaccinated_per_hundred`
+    -   `total_boosters_per_hundred`
+    -   `tests_per_case`
+    -   `handwashing_facilities`
+    -   `human_development_index`
+    
   + Focus on a subset of rows that you can easily load into R
+  
+    -   We will filter the data to be about a specific set of dates  
+  
   + Look for missing data & outliers
+  
+    -   A lot of rows with earlier dates in time have empty values
+    -   This makes sense because the pandemic had maybe not reached those places yet nor had efforts started to collect data there
+    
   + Understand what the values of the variables mean
+    
+    -   They are explained in the [https://www.kaggle.com/georgesaavedra/covid19-dataset](Kaggle page about the data)
+  
   + Get a sense for possible relationships that may exist in the data
+  
+    -   Coming into this project, we already suspect that that there will be a strong negative correlation between vaccination metrics and the number of total cases that are reported in any location
+  
 
 ### Required Analyses {-}
 
