@@ -2,8 +2,6 @@
 knitr::opts_chunk$set(echo=TRUE, eval=FALSE)
 ```
 
-Stats is pooopy
-
 # Homework 2 {-}
 
 <center>
@@ -35,7 +33,21 @@ Alternatively, you may knit your Rmd directly to PDF if you have LaTeX installed
 ### Project Work
 1. Finalize the data set you'd like to work with
 - COVID data from Our World in Data
-2. 
+
+2. Make sure that you can read it into R
+- YES
+
+3. Made some initial progress on visualizing and cleaning the data
+  + Choose one quantitative outcome variable for regression
+  Number of confirmed cases
+  
+  + Focus on a subset of about 10-20 predictor variables for now
+  
+  
+  + Focus on a subset of rows that you can easily load into R
+  + Look for missing data & outliers
+  + Understand what the values of the variables mean
+  + Get a sense for possible relationships that may exist in the data
 
 ### Required Analyses {-}
 
