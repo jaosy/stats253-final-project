@@ -124,10 +124,23 @@ covid <- read_csv("owid-covid-data.csv")
 ```{r}
 # creation of cv folds
 
+set.seed(123)
+covid_cv10 <- vfold_cv(covid, v = 10)
+
 ```
 
 ```{r}
 # model spec
+lm_spec <-
+    linear_reg() %>% 
+    set_engine(engine = 'lm') %>% 
+    set_mode('regression')
+
+lm_lasso_spec <- 
+  linear_reg() %>%
+  set_args(mixture = 1, penalty = 0) %>% 
+  set_engine(engine = 'glmnet') %>% 
+  set_mode('regression') 
 
 ```
 
@@ -153,7 +166,6 @@ d.
 
 ```{r}
 # visual residuals
-
 ```
 
 e.
