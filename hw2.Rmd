@@ -182,6 +182,8 @@ plot(mod_lasso_fit %>% extract_fit_parsnip() %>% pluck('fit'), # way to get the 
 penalty_grid <- grid_regular(penalty(range = c(-5,3)), levels = 30)
 
 
+
+
 ```
 
 c.
@@ -216,7 +218,8 @@ e.
 
 3. **Societal impact**
     - Are there any harms that may come from your analyses and/or how the data were collected?
-    - What cautions do you want to keep in mind when communicating your work?
+    
+
 
 
 
