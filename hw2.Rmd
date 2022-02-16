@@ -159,6 +159,14 @@ covid_recipe <- recipe(total_cases ~ ., data = covid) %>%
   step_nzv(all_predictors()) %>%
   step_normalize(all_numeric_predictors()) %>%
   step_dummy(all_nominal_predictors())
+
+covid_wf <- workflow() %>%
+  add_recipe(covid_recipe) %>%
+  add_model(lm_spec)
+
+covid_wf_lasso <- workflow() %>%
+  add_recipe(covid_recipe) %>%
+  add_model(lm_lasso_spec)
 ```
 
 ```{r}
