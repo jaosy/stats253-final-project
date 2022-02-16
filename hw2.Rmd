@@ -156,8 +156,9 @@ lm_lasso_spec <-
 # recipes & workflows
 # specify Recipe (if you have preprocessing steps)
 covid_recipe <- recipe(total_cases ~ ., data = covid) %>%
-  step_{FILLIN}() %>%
-  step_{FILLIN}() 
+  step_nzv(all_predictors()) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors())
 ```
 
 ```{r}
