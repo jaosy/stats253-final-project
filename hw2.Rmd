@@ -119,7 +119,18 @@ covid <- read_csv("owid-covid-data.csv")
 ```{r}
 # data cleaning
 
+<<<<<<< HEAD
+=======
+covid <- covid %>% 
+  select(location, continent, date, population_density, total_deaths, reproduction_rate, people_vaccinated_per_hundred, people_fully_vaccinated_per_hundred, total_boosters_per_hundred, tests_per_case, handwashing_facilities, human_development_index)
+
+>>>>>>> 0a68d050efc8679ae2631dd02cd340329e95c06a
+
 ```
+
+- The date range is May 1st 2021 onwards. 
+- This is when vaccinations started to become widespread (at least in the United States).
+- We will start by looking at worldwide trends, and apply a `filter` if we want to look at a specific country or region.
 
 ```{r}
 # creation of cv folds
