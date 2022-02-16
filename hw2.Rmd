@@ -157,7 +157,7 @@ covid_recipe <- recipe(total_cases ~ reproduction_rate + people_vaccinated_per_h
   step_novel(all_nominal_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>%
   step_dummy(all_nominal_predictors()) %>%
-  step_naomit(all_predictors())
+  step_naomit(all_predictors(), skip = TRUE)
 
 covid_wf <- workflow() %>%
   add_recipe(covid_recipe) %>%
@@ -187,6 +187,14 @@ penalty_grid <- grid_regular(penalty(range = c(-5,3)), levels = 30)
 c.
 
 ```{r}
+
+tune_res <- tune_grid( # new function for tuning parameters
+  covid_wf_lasso, # workflow
+  resamples = covid_cv10, # cv folds
+  metrics = metric_set(rmse, mae),
+  grid = penalty_grid # penalty grid defined above
+)
+
 #  calculate/collect CV metrics
 collect_metrics(tune_res) %>%
   filter(.metric == 'rmse') %>% # or choose mae
@@ -194,6 +202,8 @@ collect_metrics(tune_res) %>%
 
 # choose penalty value based on lowest mae or rmse
 best_penalty <- select_best(tune_res, metric = 'rmse') 
+
+
 ```
 
  
