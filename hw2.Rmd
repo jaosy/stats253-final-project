@@ -120,7 +120,6 @@ covid <- read_csv("owid-covid-data.csv")
 # data cleaning
 covid <- covid %>% 
   select(total_cases, new_cases, location, continent, date, population_density, total_deaths, reproduction_rate, people_vaccinated_per_hundred, people_fully_vaccinated_per_hundred, total_boosters_per_hundred, tests_per_case, handwashing_facilities, human_development_index)
-
 ```
 
 - The date range is May 1st 2021 onwards. 
@@ -129,10 +128,8 @@ covid <- covid %>%
 
 ```{r}
 # creation of cv folds
-
 set.seed(123)
 covid_cv10 <- vfold_cv(covid, v = 10)
-
 ```
 
 ```{r}
@@ -146,7 +143,7 @@ lm_spec <-
 # LASSO
 lm_lasso_spec <- 
   linear_reg() %>%
-  set_args(mixture = 1, penalty = 0) %>% 
+  set_args(mixture = 1, penalty = tune()) %>% 
   set_engine(engine = 'glmnet') %>% 
   set_mode('regression') 
 
@@ -155,10 +152,12 @@ lm_lasso_spec <-
 ```{r}
 # recipes & workflows
 # specify Recipe (if you have preprocessing steps)
-covid_recipe <- recipe(total_cases ~ ., data = covid) %>%
+covid_recipe <- recipe(total_cases ~ reproduction_rate + people_vaccinated_per_hundred, data = covid) %>%
   step_nzv(all_predictors()) %>%
+  step_novel(all_nominal_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>%
-  step_dummy(all_nominal_predictors())
+  step_dummy(all_nominal_predictors()) %>%
+  step_naomit(all_predictors())
 
 covid_wf <- workflow() %>%
   add_recipe(covid_recipe) %>%
@@ -171,6 +170,17 @@ covid_wf_lasso <- workflow() %>%
 
 ```{r}
 # fit & tune models
+mod_lm_fit <- fit(covid_wf, data = covid)
+mod_lm_fit %>% tidy()
+
+mod_lasso_fit <- fit(covid_wf_lasso, data = covid)
+
+plot(mod_lasso_fit %>% extract_fit_parsnip() %>% pluck('fit'), # way to get the original glmnet output
+     xvar = "lambda") # glmnet fits the model with a variety of lambda penalty values
+
+# tune model (try a variety of lambda penalty values)
+penalty_grid <- grid_regular(penalty(range = c(-5,3)), levels = 30)
+
 
 ```
 
@@ -178,7 +188,12 @@ c.
 
 ```{r}
 #  calculate/collect CV metrics
+collect_metrics(tune_res) %>%
+  filter(.metric == 'rmse') %>% # or choose mae
+  select(penalty, rmse = mean) 
 
+# choose penalty value based on lowest mae or rmse
+best_penalty <- select_best(tune_res, metric = 'rmse') 
 ```
 
  
@@ -194,6 +209,8 @@ e.
 
 2. **Summarize investigations**
     - Decide on an overall best model based on your investigations so far. To do this, make clear your analysis goals. Predictive accuracy? Interpretability? A combination of both?
+
+
 
 <br>
 
