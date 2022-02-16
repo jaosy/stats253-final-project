@@ -238,6 +238,11 @@ e.
 3. **Societal impact**
     - Are there any harms that may come from your analyses and/or how the data were collected?
     
+    These analyses focus on the COVID-19 pandemic which has resulted in widespread illness and death. The data reflects the very real tragedies of people around the world, and as such should be considered with gravity. These data have been collected in an anonymous way to respect the privacy of those they represent, and can be used in the important effort to understand better the spread of the disease. We do not anticipate incurring any societal harm through the use and analysis of this data. 
+    
+    - What cautions do you want to keep in mind when communicating your work?
+    
+It is important to remember that the reporting of these data has been done individually by each country, and therefore is incomplete and prone to some inconsistencies. Additionally, it is important to remember the people behind these data, both for context and in recognition of the lives lost. 
 
 
 
