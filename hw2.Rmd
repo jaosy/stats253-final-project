@@ -119,6 +119,10 @@ covid <- read_csv("owid-covid-data.csv")
 ```{r}
 # data cleaning
 
+covid <- covid %>% 
+  select(location, continent, date, population_density, total_deaths, reproduction_rate, people_vaccinated_per_hundred, people_fully_vaccinated_per_hundred, total_boosters_per_hundred, tests_per_case, handwashing_facilities, human_development_index)
+
+
 ```
 
 ```{r}
