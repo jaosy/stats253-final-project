@@ -206,6 +206,15 @@ best_penalty <- select_best(tune_res, metric = 'rmse')
 
 ```
 
+```{r}
+#Fit Final Model
+final_wf <- finalize_workflow(covid_wf_lasso, best_penalty) # incorporates penalty value to workflow
+
+final_fit <- fit(final_wf, data = covid)
+
+tidy(final_fit)
+```
+
  
 d.
 
