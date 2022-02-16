@@ -140,6 +140,64 @@ lm_spec <-
     set_engine(engine = 'lm') %>% 
     set_mode('regression')
 
+mod1 <- fit(lm_spec,
+            total_cases ~ population_density+total_deaths+reproduction_rate+people_vaccinated_per_hundred, 
+            data = covid)
+
+mod2 <- fit(lm_spec,
+            total_cases ~ reproduction_rate, 
+            data = covid)
+
+mod3 <- fit(lm_spec,
+            total_cases ~ reproduction_rate+population_density, 
+            data = covid)
+
+mod4 <- fit(lm_spec,
+            total_cases ~ reproduction_rate+population_density+people_vaccinated_per_hundred, 
+            data = covid)
+
+mod5 <- fit(lm_spec,
+            total_cases ~ reproduction_rate+population_density+people_vaccinated_per_hundred+total_boosters_per_hundred, 
+            data = covid)
+
+mod6 <- fit(lm_spec,
+            total_cases ~ reproduction_rate+population_density+handwashing_facilities+human_development_index, 
+            data = covid)
+
+mod7 <- fit(lm_spec,
+            total_cases ~ .,  # The . means all predictors
+            data = covid) 
+
+covid_rec_ols <- recipe(total_cases ~ .,  data = covid) %>%
+  step_normalize(all_numeric_predictors()) 
+
+cov_wf_ols <- workflow() %>%
+  add_recipe(covid_rec_ols) %>%
+  add_model(lm_spec) 
+
+mod8 <- fit(cov_wf_ols,
+            data = covid) 
+
+```
+
+```{r}
+mod8 %>% #comment here
+  tidy() %>% #
+  slice(-1) %>% # 
+  mutate(lower = estimate - 1.96*std.error, upper = estimate + 1.96*std.error) %>% #
+  ggplot() + # 
+    geom_vline(xintercept=0, linetype=4) + # 
+    geom_point(aes(x=estimate, y=term)) + # 
+    geom_segment(aes(y=term, yend=term, x=lower, xend=upper), arrow = arrow(angle=90, ends='both', length = unit(0.1, 'cm'))) + # 
+    labs(x = 'Coefficient estimate (95% CI)', y = 'Feature') +  #
+    theme_classic() #
+
+mod1 %>%
+  tidy()
+```
+
+
+```{r}
 # LASSO
 lm_lasso_spec <- 
   linear_reg() %>%
@@ -170,8 +228,6 @@ covid_wf_lasso <- workflow() %>%
 
 ```{r}
 # fit & tune models
-mod_lm_fit <- fit(covid_wf, data = covid)
-mod_lm_fit %>% tidy()
 
 mod_lasso_fit <- fit(covid_wf_lasso, data = covid)
 
