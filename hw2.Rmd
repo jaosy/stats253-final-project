@@ -119,7 +119,12 @@ covid <- read_csv("owid-covid-data.csv")
 ```{r}
 # data cleaning
 
+
 ```
+
+- The date range is May 1st 2021 onwards. 
+- This is when vaccinations started to become widespread (at least in the United States).
+- We will start by looking at worldwide trends, and apply a `filter` if we want to look at a specific country or region.
 
 ```{r}
 # creation of cv folds
