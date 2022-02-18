@@ -424,11 +424,10 @@ tune_res <- tune_grid( # new function for tuning parameters
 #  calculate/collect CV metrics
 collect_metrics(tune_res) %>%
   filter(.metric == 'mae') %>% # or choose mae
-  select(penalty, rmse = mean) 
+  select(penalty, mae = mean) 
 
 # choose penalty value based on lowest mae or rmse
 best_penalty <- select_best(tune_res, metric = 'mae') 
-
 
 ```
 
