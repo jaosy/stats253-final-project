@@ -560,11 +560,16 @@ lasso_mod_out %>%
 
 e.
 
+We can look at the LASSO regression results to determine variable importance. LASSO is a shrinking algorithm which will eliminate weak predictors from the model by setting their coefficients to 0. From the estimate values of the coefficients, we can see that `total_deaths`, `people_vaccinated_per_hundred` and `total_boosters_per_hundred` have been shrunk to 0 and are not considered important variables in the model. 
+
+However, the magnitude of the other coefficients produced by the LASSO algorithm are quite large, so this indicates that they are all important variables.
+
 <br>
 
 2. **Summarize investigations**
     - Decide on an overall best model based on your investigations so far. To do this, make clear your analysis goals. Predictive accuracy? Interpretability? A combination of both?
 
+Our analysis goal is to predict new COVID cases.
 
 
 <br>
