@@ -61,7 +61,7 @@ Alternatively, you may knit your Rmd directly to PDF if you have LaTeX installed
     
   + Focus on a subset of rows that you can easily load into R
   
-    -   We will filter the data to be about a specific set of dates  
+    -   We're focusing on cases within the USA. 
   
   + Look for missing data & outliers
   
@@ -74,7 +74,7 @@ Alternatively, you may knit your Rmd directly to PDF if you have LaTeX installed
   
   + Get a sense for possible relationships that may exist in the data
   
-    -   Coming into this project, we already suspect that that there will be a strong negative correlation between vaccination metrics and the number of total cases that are reported in any location
+    -   Coming into this project, we already suspect that that there will be a strong negative correlation between vaccination metrics and the number of total cases that are reported in any location.
   
 
 ### Required Analyses {-}
@@ -107,7 +107,8 @@ library(dplyr)
 library(readr)
 library(broom)
 library(ggplot2)
-library(tidymodels) 
+library(tidymodels)
+library(lubridate)
 tidymodels_prefer() # Resolves conflicts, prefers tidymodel functions
 
 # read in data
@@ -117,11 +118,14 @@ covid <- read_csv("owid-covid-data.csv")
 ```{r}
 # data cleaning
 covid <- covid %>% 
-  select(total_cases, new_cases, location, continent, date, population_density, total_deaths, reproduction_rate, people_vaccinated_per_hundred, people_fully_vaccinated_per_hundred, total_boosters_per_hundred, tests_per_case, handwashing_facilities, human_development_index) %>%
-    filter(location == "United States")
+  select(total_cases, new_cases, location, date, population_density, total_deaths, reproduction_rate, people_vaccinated_per_hundred, people_fully_vaccinated_per_hundred, total_boosters_per_hundred, tests_per_case, human_development_index) %>%
+    filter(location == "United States") %>%
+    filter(date >= as.Date("2021-08-13"))%>%
+    na.omit(covid)
+
 ```
 
-- The date range is May 1st 2021 onwards. 
+- We're considering COVID cases occurring after the first recorded booster vaccines to best capture today's landscape.  
 - This is when vaccinations started to become widespread (at least in the United States).
 - We will start by looking at worldwide trends, and apply a `filter` if we want to look at a specific country or region.
 
@@ -139,33 +143,26 @@ lm_spec <-
     set_engine(engine = 'lm') %>% 
     set_mode('regression')
 
-mod1 <- fit(lm_spec,
-            total_cases ~ population_density+total_deaths+reproduction_rate+people_vaccinated_per_hundred, 
-            data = covid)
+#mod1 <- fit(lm_spec,
+            #total_cases ~ ., 
+            #data = covid)
 
 mod2 <- fit(lm_spec,
             total_cases ~ reproduction_rate, 
             data = covid)
 
 mod3 <- fit(lm_spec,
-            total_cases ~ reproduction_rate+population_density, 
+            total_cases ~ reproduction_rate+people_vaccinated_per_hundred, 
             data = covid)
 
 mod4 <- fit(lm_spec,
-            total_cases ~ reproduction_rate+population_density+people_vaccinated_per_hundred, 
+            total_cases ~ reproduction_rate+people_vaccinated_per_hundred+people_fully_vaccinated_per_hundred, 
             data = covid)
 
 mod5 <- fit(lm_spec,
-            total_cases ~ reproduction_rate+population_density+people_vaccinated_per_hundred+total_boosters_per_hundred, 
+            total_cases ~ reproduction_rate+people_vaccinated_per_hundred+people_fully_vaccinated_per_hundred+total_boosters_per_hundred, 
             data = covid)
 
-mod6 <- fit(lm_spec,
-            total_cases ~ reproduction_rate+population_density+handwashing_facilities+human_development_index, 
-            data = covid)
-
-mod7 <- fit(lm_spec,
-            total_cases ~ .,  # The . means all predictors
-            data = covid) 
 
 covid_rec_ols <- recipe(total_cases ~ .,  data = covid) %>%
   step_normalize(all_numeric_predictors()) 
@@ -174,7 +171,7 @@ cov_wf_ols <- workflow() %>%
   add_recipe(covid_rec_ols) %>%
   add_model(lm_spec) 
 
-mod8 <- fit(cov_wf_ols,
+mod2 <- fit(cov_wf_ols,
             data = covid) 
 
 ```
