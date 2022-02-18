@@ -569,7 +569,7 @@ However, the magnitude of the other coefficients produced by the LASSO algorithm
 2. **Summarize investigations**
     - Decide on an overall best model based on your investigations so far. To do this, make clear your analysis goals. Predictive accuracy? Interpretability? A combination of both?
 
-Our analysis goal is to predict new COVID cases.
+Our analysis goal is to predict the quantity of new COVID cases. Given the universal salience of this subject, it is important to have both highly interpretable results as well as a quality predictive model. To attempt to explain the rate of new COVID cases, we have fit a series of least-squares linear regression models, as well as a series of models subjected to LASSO linear regression. Of our fit models, we find that the best-fit LASSO model has the lowest mean absolute error (MAE), therefore producing the most accurate prediction of our fit models. However, even this model results in a sizable MAE. To correct this, we must consider the non linearity of some input variables, and undertake steps to model them using polynomial regression.  
 
 
 <br>
