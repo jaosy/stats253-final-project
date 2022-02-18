@@ -46,18 +46,14 @@ Alternatively, you may knit your Rmd directly to PDF if you have LaTeX installed
   
   + Focus on a subset of about 10-20 predictor variables for now
   
-    -   `location`
-    -   `continent`
     -   `date`
-    -   `population_density` 
     -   `total_deaths`
     -   `reproduction_rate`
     -   `people_vaccinated_per_hundred`
     -   `people_fully_vaccinated_per_hundred`
     -   `total_boosters_per_hundred`
     -   `tests_per_case`
-    -   `handwashing_facilities`
-    -   `human_development_index`
+    -   `new_cases`
     
   + Focus on a subset of rows that you can easily load into R
   
@@ -118,11 +114,10 @@ covid <- read_csv("owid-covid-data.csv")
 ```{r}
 # data cleaning
 covid <- covid %>% 
-  select(total_cases, new_cases, location, date, population_density, total_deaths, reproduction_rate, people_vaccinated_per_hundred, people_fully_vaccinated_per_hundred, total_boosters_per_hundred, tests_per_case, human_development_index) %>%
-    filter(location == "United States") %>%
-    filter(date >= as.Date("2021-08-13"))%>%
-    na.omit(covid)
-
+  filter(location == 'United States') %>%
+  select(total_cases, new_cases, date, total_deaths, reproduction_rate, people_vaccinated_per_hundred, people_fully_vaccinated_per_hundred, total_boosters_per_hundred, tests_per_case) %>%
+  filter(date >= as.Date("2021-08-13"))%>%
+  na.omit(covid)
 ```
 
 - We're considering COVID cases occurring after the first recorded booster vaccines to best capture today's landscape.  
@@ -169,7 +164,10 @@ covid_rec_ols <- recipe(total_cases ~ .,  data = covid) %>%
 
 cov_wf_ols <- workflow() %>%
   add_recipe(covid_rec_ols) %>%
-  add_model(lm_spec) 
+  add_model(lm_spec)%>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_nzv(all_predictors())
 
 mod2 <- fit(cov_wf_ols,
             data = covid) 
