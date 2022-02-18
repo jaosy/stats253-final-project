@@ -162,6 +162,7 @@ mod5 <- fit(lm_spec,
 covid_rec_ols <- recipe(new_cases ~ .,  data = covid) %>%
   step_normalize(all_numeric_predictors()) 
 
+#mod1
 cov_wf_ols <- workflow() %>%
   add_recipe(covid_rec_ols) %>%
   add_model(lm_spec)%>%
@@ -169,8 +170,39 @@ cov_wf_ols <- workflow() %>%
   step_dummy(all_nominal_predictors()) %>%
   step_nzv(all_predictors())
 
+
+
 mod1 <- fit(cov_wf_ols,
             data = covid) 
+
+#mod2
+cov_wf_ols2 <- workflow() %>%
+  add_formula(new_cases ~ reproduction_rate)%>%
+  add_model(lm_spec)%>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_nzv(all_predictors())
+
+cov_wf_ols3 <- workflow() %>%
+  add_formula(new_cases ~ reproduction_rate+people_vaccinated_per_hundred)%>%
+  add_model(lm_spec)%>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_nzv(all_predictors())
+
+cov_wf_ols4 <- workflow() %>%
+  add_formula(new_cases ~ reproduction_rate+people_vaccinated_per_hundred+people_fully_vaccinated_per_hundred)%>%
+  add_model(lm_spec)%>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_nzv(all_predictors())
+
+cov_wf_ols5 <- workflow() %>%
+  add_formula(new_cases ~ reproduction_rate+people_vaccinated_per_hundred+people_fully_vaccinated_per_hundred+total_boosters_per_hundred)%>%
+  add_model(lm_spec)%>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_nzv(all_predictors())
 
 ```
 
@@ -362,7 +394,68 @@ ggplot(mod5_output, aes(y=resid, x=total_boosters_per_hundred)) +
 
 ```
 
+```{r}
 
+mod1_cv <- fit_resamples(cov_wf_ols,
+  resamples = covid_cv10, 
+  metrics = metric_set(rmse, rsq, mae))
+  
+  
+mod2_cv <- fit_resamples(cov_wf_ols2,
+  resamples = covid_cv10, 
+  metrics = metric_set(rmse, rsq, mae))
+  
+  
+mod3_cv <- fit_resamples(cov_wf_ols3,
+  resamples = covid_cv10, 
+  metrics = metric_set(rmse, rsq, mae))
+  
+  
+mod4_cv <- fit_resamples(cov_wf_ols4,
+  resamples = covid_cv10, 
+  metrics = metric_set(rmse, rsq, mae))
+  
+  
+mod5_cv <- fit_resamples(cov_wf_ols5,
+  resamples = covid_cv10, 
+  metrics = metric_set(rmse, rsq, mae))
+
+```
+
+```{r}
+
+mod1_cv %>% unnest(.metrics) %>%
+  filter(.metric == 'rmse') %>%
+  summarize(RMSE_CV = mean(.estimate))
+
+mod2_cv %>% unnest(.metrics) %>%
+  filter(.metric == 'rmse') %>%
+  summarize(RMSE_CV = mean(.estimate))
+
+mod3_cv %>% unnest(.metrics) %>%
+  filter(.metric == 'rmse') %>%
+  summarize(RMSE_CV = mean(.estimate))
+
+mod4_cv %>% unnest(.metrics) %>%
+  filter(.metric == 'rmse') %>%
+  summarize(RMSE_CV = mean(.estimate))
+
+mod5_cv %>% unnest(.metrics) %>%
+    filter(.metric == 'rmse') %>%
+    summarize(RMSE_CV = mean(.estimate))
+
+mod1_cv %>% collect_metrics()
+
+mod2_cv %>% collect_metrics()
+
+mod3_cv %>% collect_metrics()
+
+mod4_cv %>% collect_metrics()
+
+mod5_cv %>% collect_metrics()
+
+
+```
 
 
 ```{r}
