@@ -192,7 +192,7 @@ mod8 %>% #comment here
     labs(x = 'Coefficient estimate (95% CI)', y = 'Feature') +  #
     theme_classic() #
 
-mod1 %>%
+mod8 %>%
   tidy()
 ```
 
