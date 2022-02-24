@@ -471,13 +471,15 @@ lm_lasso_spec <-
 ```{r}
 # recipes & workflows
 # specify Recipe (if you have preprocessing steps)
+
+covid <- covid %>% select(-date)
+
 covid_recipe <- recipe(new_cases ~ ., data = covid) %>%
   step_nzv(all_predictors()) %>%
-  step_novel(all_nominal_predictors()) %>% 
+  step_novel(all_nominal_predictors()) %>%
   step_normalize(all_numeric_predictors()) %>%
   step_dummy(all_nominal_predictors()) %>%
-  step_naomit(all_predictors(), skip = TRUE)%>%
-  step_select(-date)
+  step_naomit(all_predictors()) #skip = TRUE
 
 
 covid_wf <- workflow() %>%
