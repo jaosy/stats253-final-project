@@ -557,7 +557,50 @@ lasso_mod_out %>%
   geom_smooth(se = FALSE) + 
   geom_hline(yintercept = 0) + 
   theme_classic()
+```
 
+```{r}
+ggplot(lasso_mod_out, aes(y=resid, x=total_cases)) +
+    geom_point() +
+    geom_smooth() +
+    geom_hline(yintercept = 0, color = "red") + 
+    theme_classic()
+
+ggplot(lasso_mod_out, aes(y=resid, x=total_deaths)) +
+    geom_point() +
+    geom_smooth() +
+    geom_hline(yintercept = 0, color = "red") + 
+    theme_classic()
+
+ggplot(lasso_mod_out, aes(y=resid, x=reproduction_rate)) +
+    geom_point() +
+    geom_smooth() +
+    geom_hline(yintercept = 0, color = "red") + 
+    theme_classic()
+
+ggplot(lasso_mod_out, aes(y=resid, x=people_vaccinated_per_hundred)) +
+    geom_point() +
+    geom_smooth() +
+    geom_hline(yintercept = 0, color = "red") + 
+    theme_classic()
+
+ggplot(lasso_mod_out, aes(y=resid, x=people_fully_vaccinated_per_hundred)) +
+    geom_point() +
+    geom_smooth() +
+    geom_hline(yintercept = 0, color = "red") + 
+    theme_classic()
+
+ggplot(lasso_mod_out, aes(y=resid, x=total_boosters_per_hundred)) +
+    geom_point() +
+    geom_smooth() +
+    geom_hline(yintercept = 0, color = "red") + 
+    theme_classic()
+
+ggplot(lasso_mod_out, aes(y=resid, x=tests_per_case)) +
+    geom_point() +
+    geom_smooth() +
+    geom_hline(yintercept = 0, color = "red") + 
+    theme_classic()
 ```
 
 e.
