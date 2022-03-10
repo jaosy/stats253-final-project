@@ -779,6 +779,7 @@ p9
 ```
 
 ```{r, fig.width = 4,fig.height = 1.5}
+### RELABEL PLOTS to include lasso and splines for distinction
 grid.arrange(pl1, p4, nrow = 1, ncol = 2)
 grid.arrange(pl2, p5, nrow = 1, ncol = 2)
 grid.arrange(pl3, p6, nrow = 1, ncol = 2)
