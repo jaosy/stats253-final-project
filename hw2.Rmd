@@ -774,11 +774,21 @@ tune_output %>% collect_metrics() %>% filter(penalty == (best_penalty %>% pull(p
 ```
 
 
-Compare insights from variable importance analyses here and the corresponding results from the Investigation 1. Now after having accounted for nonlinearity, have the most relevant predictors changed?
-  Do you gain any insights from the GAM output plots (easily obtained from fitting smoothing splines) for each predictor?
+* Compare insights from variable importance analyses here and the corresponding results from the Investigation 1. Now after having accounted for nonlinearity, have the most relevant predictors changed?
 
-Compare model performance between your GAM models that the models that assuming linearity.
-  How does test performance of the GAMs compare to other models you explored?
+--
+
+
+* Do you gain any insights from the GAM output plots (easily obtained from fitting smoothing splines) for each  predictor?
+
+The GAM output plots reveal a handful of non-linear variables, especially total vaccinations per hundred, and total boosters per hundred. This demonstrates the value of fitting models allowing for non-linearity, as forcing linearity upon these would have resulted in a poor estimate. 
+  
+  
+
+* Compare model performance between your GAM models that the models that assuming linearity.
+How does test performance of the GAMs compare to other models you explored?
+
+Across all metrics, our GAM models perform somewhat better than those which assume non-linearity. We can see this in the lower MAE, lower RMSE, and slightly higher r-squared.
 
 
 3. **Summarize investigations**
