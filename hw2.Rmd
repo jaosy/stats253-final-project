@@ -623,6 +623,18 @@ ggplot(lasso_mod_out, aes(y=resid, x=positive_rate)) +
     theme_classic()
 ```
 
+From the residual plots of the LASSO model above, it looks like we can try to model all of these predictors with nonlinear relationships. This is because the plots show heteroskedasticity. 
+
+e.
+
+We can look at the LASSO regression results to determine variable importance. LASSO is a shrinking algorithm which will eliminate weak predictors from the model by setting their coefficients to 0. From the estimate values of the coefficients, we can see that `total_deaths`, `people_vaccinated_per_hundred` and `total_boosters_per_hundred` have been shrunk to 0 and are not considered important variables in the model. 
+
+However, the magnitude of the other coefficients produced by the LASSO algorithm are quite large, so this indicates that they are all important variables.
+
+
+<br>
+
+2. **Non linearity**
 ```{r}
 # GAMS
 
@@ -646,6 +658,7 @@ gam_mod %>% pluck('fit') %>% summary()
 gam_mod %>% pluck('fit') %>% plot()
 gam_mod %>% pluck('fit') %>% plot( all.terms = TRUE, pages = 1)
 ```
+
 ```{r}
 #fitting a more simple GAM model by only allowing for a non-linear function if the edf is greater than 3.
 gam_mod2 <- fit(gam_spec,
@@ -654,23 +667,12 @@ gam_mod2 <- fit(gam_spec,
 )
 
 gam_mod2 %>% pluck('fit') %>% summary() 
-gam_mod2 %>% pluck('fit') %>% plot( all.terms = TRUE, pages = 1)
-```
+gam_mod2 %>% pluck('fit') %>% plot(all.terms = TRUE, pages=1)
+``` 
 
-
-From the residual plots of the LASSO model above, it looks like we can try to model all of these predictors with nonlinear relationships. This is because the plots show heteroskedasticity. 
-
-e.
-
-We can look at the LASSO regression results to determine variable importance. LASSO is a shrinking algorithm which will eliminate weak predictors from the model by setting their coefficients to 0. From the estimate values of the coefficients, we can see that `total_deaths`, `people_vaccinated_per_hundred` and `total_boosters_per_hundred` have been shrunk to 0 and are not considered important variables in the model. 
-
-However, the magnitude of the other coefficients produced by the LASSO algorithm are quite large, so this indicates that they are all important variables.
-
-<br>
-
-2. **Non linearity**
 
 ```{r}
+
 covid_rec_spline <- recipe(new_cases ~ total_cases + total_deaths + reproduction_rate + people_vaccinated_per_hundred + people_fully_vaccinated_per_hundred+ total_boosters_per_hundred+ tests_per_case + icu_patients+ positive_rate, data = covid)
   
 spline_rec <- covid_rec_spline %>% 
@@ -682,10 +684,10 @@ spline_rec <- covid_rec_spline %>%
   step_ns(positive_rate, deg_free = 1)
   
 
-
 # Check the pre-processed data
 spline_rec %>% prep(covid) %>% juice()
 ```
+
 ```{r}
 lm_spec <-
   linear_reg() %>%
