@@ -105,6 +105,7 @@ library(broom)
 library(ggplot2)
 library(tidymodels)
 library(lubridate)
+library(gridExtra)
 tidymodels_prefer() # Resolves conflicts, prefers tidymodel functions
 
 # read in data
@@ -568,59 +569,69 @@ lasso_mod_out %>%
 Our group determined from homework 1 that the LASSO model was the best model for our data so far, because it had the lowest MAE compared to the other models we tried.
 
 ```{r}
-ggplot(lasso_mod_out, aes(y=resid, x=total_cases)) +
+pl1 <- ggplot(lasso_mod_out, aes(y=resid, x=total_cases)) +
     geom_point() +
     geom_smooth() +
     geom_hline(yintercept = 0, color = "red") + 
     theme_classic()
 
-ggplot(lasso_mod_out, aes(y=resid, x=total_deaths)) +
+pl2 <- ggplot(lasso_mod_out, aes(y=resid, x=total_deaths)) +
     geom_point() +
     geom_smooth() +
     geom_hline(yintercept = 0, color = "red") + 
     theme_classic()
 
-ggplot(lasso_mod_out, aes(y=resid, x=reproduction_rate)) +
+pl3 <- ggplot(lasso_mod_out, aes(y=resid, x=reproduction_rate)) +
     geom_point() +
     geom_smooth() +
     geom_hline(yintercept = 0, color = "red") + 
     theme_classic()
 
-ggplot(lasso_mod_out, aes(y=resid, x=people_vaccinated_per_hundred)) +
+pl4<- ggplot(lasso_mod_out, aes(y=resid, x=people_vaccinated_per_hundred)) +
     geom_point() +
     geom_smooth() +
     geom_hline(yintercept = 0, color = "red") + 
     theme_classic()
 
-ggplot(lasso_mod_out, aes(y=resid, x=people_fully_vaccinated_per_hundred)) +
+pl5 <- ggplot(lasso_mod_out, aes(y=resid, x=people_fully_vaccinated_per_hundred)) +
     geom_point() +
     geom_smooth() +
     geom_hline(yintercept = 0, color = "red") + 
     theme_classic()
 
-ggplot(lasso_mod_out, aes(y=resid, x=total_boosters_per_hundred)) +
+pl6 <- ggplot(lasso_mod_out, aes(y=resid, x=total_boosters_per_hundred)) +
     geom_point() +
     geom_smooth() +
     geom_hline(yintercept = 0, color = "red") + 
     theme_classic()
 
-ggplot(lasso_mod_out, aes(y=resid, x=tests_per_case)) +
+pl7 <- ggplot(lasso_mod_out, aes(y=resid, x=tests_per_case)) +
     geom_point() +
     geom_smooth() +
     geom_hline(yintercept = 0, color = "red") + 
     theme_classic()
 
-ggplot(lasso_mod_out, aes(y=resid, x=icu_patients)) +
+pl8 <- ggplot(lasso_mod_out, aes(y=resid, x=icu_patients)) +
     geom_point() +
     geom_smooth() +
     geom_hline(yintercept = 0, color = "red") + 
     theme_classic()
 
-ggplot(lasso_mod_out, aes(y=resid, x=positive_rate)) +
+pl9 <- ggplot(lasso_mod_out, aes(y=resid, x=positive_rate)) +
     geom_point() +
     geom_smooth() +
     geom_hline(yintercept = 0, color = "red") + 
     theme_classic()
+
+pl1
+pl2
+pl3
+pl4
+pl5
+pl6
+pl7
+pl8
+pl9
 ```
 
 From the residual plots of the LASSO model above, it looks like we can try to model all of these predictors with nonlinear relationships. This is because the plots show heteroskedasticity. 
@@ -765,6 +776,15 @@ p6
 p7
 p8
 p9
+```
+
+```{r, fig.width = 4,fig.height = 1.5}
+grid.arrange(pl1, p4, nrow = 1, ncol = 2)
+grid.arrange(pl2, p5, nrow = 1, ncol = 2)
+grid.arrange(pl3, p6, nrow = 1, ncol = 2)
+grid.arrange(pl4, p7, nrow = 1, ncol = 2)
+grid.arrange(pl6, p8, nrow = 1, ncol = 2)
+grid.arrange(pl9, p9, nrow = 1, ncol = 2)
 ```
 
 * Compare insights from variable importance analyses here and the corresponding results from the Investigation 1. Now after having accounted for nonlinearity, have the most relevant predictors changed?
