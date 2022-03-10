@@ -547,6 +547,8 @@ d.
 tune_res %>% collect_metrics() %>% filter(penalty == (best_se_penalty %>% pull(penalty)))
 ```
 
+### Residual Plot of LASSO Model Prediction
+
 ```{r}
 lasso_mod_out <- final_fit_se %>%
     predict(new_data = covid) %>%
@@ -560,6 +562,10 @@ lasso_mod_out %>%
   geom_hline(yintercept = 0) + 
   theme_classic()
 ```
+
+### Residuals from LASSO Model
+
+Our group determined from homework 1 that the LASSO model was the best model for our data so far, because it had the lowest MAE compared to the other models we tried.
 
 ```{r}
 ggplot(lasso_mod_out, aes(y=resid, x=total_cases)) +
@@ -604,6 +610,8 @@ ggplot(lasso_mod_out, aes(y=resid, x=tests_per_case)) +
     geom_hline(yintercept = 0, color = "red") + 
     theme_classic()
 ```
+
+From the residual plots of the LASSO model above, it looks like we can try to model all of these predictors with nonlinear relationships. This is because the plots show heteroskedasticity. 
 
 e.
 
