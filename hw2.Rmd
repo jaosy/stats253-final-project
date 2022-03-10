@@ -394,8 +394,10 @@ ggplot(mod5_output, aes(y=resid, x=total_boosters_per_hundred)) +
 
 ```
 
-```{r}
+From the residual plots, it seems that `people_fully_vaccinated_per_hundred	`, `people_vaccinated_per_hundred` and	
+`total_boosters_per_hundred` are variables that look like they would be better modeled with nonlinear relationships.  
 
+```{r}
 mod1_cv <- fit_resamples(cov_wf_ols,
   resamples = covid_cv10, 
   metrics = metric_set(rmse, rsq, mae))
