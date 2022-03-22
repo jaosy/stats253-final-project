@@ -678,7 +678,8 @@ gam_mod2 <- fit(gam_spec,
 )
 
 gam_mod2 %>% pluck('fit') %>% summary() 
-gam_mod2 %>% pluck('fit') %>% plot(all.terms = TRUE, pages=1)
+gam_mod2 %>% pluck('fit') %>% plot()
+# gam_mod2 %>% pluck('fit') %>% plot(all.terms = TRUE, pages=1)
 ``` 
 
 
@@ -790,7 +791,7 @@ grid.arrange(pl9, p9, nrow = 1, ncol = 2)
 
 * Compare insights from variable importance analyses here and the corresponding results from the Investigation 1. Now after having accounted for nonlinearity, have the most relevant predictors changed?
 
---
+-- 
 
 
 * Do you gain any insights from the GAM output plots (easily obtained from fitting smoothing splines) for each  predictor?
