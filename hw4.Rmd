@@ -9,7 +9,14 @@ knitr::opts_chunk$set(echo=TRUE, eval=FALSE)
 For this homework,
 
 1. **Specify the research question for a classification task.**
+
+Can we predict the continent the observation comes from?
+
 2. **Try to implement at least 2 different classification methods to answer your research question.**
+
+1. Decision tree
+2. 
+
 3. **Reflect on the information gained from these two methods and how you might justify this method to others.**
 
 #### Your Work {-}
