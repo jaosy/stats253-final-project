@@ -1,0 +1,220 @@
+```{r hw2_setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, eval=FALSE)
+```
+
+# Homework 4
+
+## Required Analysis
+
+For this homework,
+
+1. **Specify the research question for a classification task.**
+
+Can we predict the continent the observation comes from?
+
+2. **Try to implement at least 2 different classification methods to answer your research question.**
+
+1. Decision tree
+2. 
+
+3. **Reflect on the information gained from these two methods and how you might justify this method to others.**
+
+#### Your Work {-}
+
+```{r}
+# library statements 
+library(dplyr)
+library(readr)
+library(broom)
+library(ggplot2)
+library(tidymodels)
+library(lubridate)
+library(gridExtra)
+library(vip)
+library(ranger)
+tidymodels_prefer() # Resolves conflicts, prefers tidymodel functions
+conflicted::conflict_prefer("vi", "vip")
+
+# read in data
+covid <- read_csv("owid-covid-data.csv")
+```
+
+```{r}
+# data cleaning
+covid <- covid %>%
+  filter(date >= as.Date("2021-08-13"))%>%
+  na.omit(covid) %>%
+  filter(continent %in% c("North America", "Asia", "South America", "Africa", "Europe")) %>%
+  mutate(continent = factor(continent))
+```
+
+- We're considering COVID cases occurring after the first recorded booster vaccines (13th August, 2021) to best capture today's landscape.  
+- This is when vaccinations started to become widespread (at least in the United States).
+- In addition to our existing variables, we also added the following to our model to predict the continent:
+    - `life_expectancy`
+    - `population_density`
+    - `median_age`
+    - `gdp_per_capita`
+    
+
+
+
+```{r}
+# Bagging and Random Forest
+
+# Model Specification
+rf_spec <- rand_forest() %>%
+  set_engine(engine = 'ranger') %>% 
+  set_args(mtry = NULL, # size of random subset of variables; default is floor(sqrt(ncol(x)))
+           trees = 1000, # Number of trees
+           min_n = 2,
+           probability = FALSE, # FALSE: hard predictions
+           importance = 'impurity') %>% 
+  set_mode('classification') # change this for regression tree
+
+# Recipe
+rf_rec <- recipe(continent ~ ., data = covid)
+
+# Workflows
+data_wf_mtry2 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 2)) %>%
+  add_recipe(rf_rec)
+
+# Create workflows for mtry = 8, 33, and 67
+data_wf_mtry8 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 8)) %>%
+  add_recipe(rf_rec)
+
+data_wf_mtry33 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 33)) %>%
+  add_recipe(rf_rec)
+
+data_wf_mtry67 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 67)) %>%
+  add_recipe(rf_rec)
+```
+
+```{r}
+# Fit Models
+
+set.seed(123) # make sure to run this before each fit so that you have the same 1000 trees
+data_fit_mtry2 <- fit(data_wf_mtry2, data = covid)
+
+set.seed(123)
+data_fit_mtry8 <- fit(data_wf_mtry8, data = covid)
+
+set.seed(123) 
+data_fit_mtry33 <- fit(data_wf_mtry33, data = covid)
+
+set.seed(123)
+data_fit_mtry67 <- fit(data_wf_mtry67, data = covid)
+```
+```{r}
+# Custom Function to get OOB predictions, true observed outcomes and add a model label
+rf_OOB_output <- function(fit_model, model_label, truth){
+    tibble(
+          .pred_continent = fit_model %>% extract_fit_engine() %>% pluck('predictions'), #OOB predictions
+          continent = truth,
+          model = model_label
+      )
+}
+
+#check out the function output
+rf_OOB_output(data_fit_mtry2,'mtry2', covid %>% pull(continent))
+```
+
+```{r}
+# Evaluate OOB Metrics
+
+data_rf_OOB_output <- bind_rows(
+    rf_OOB_output(data_fit_mtry2,'mtry2', covid %>% pull(continent)),
+    rf_OOB_output(data_fit_mtry8,'mtry8', covid %>% pull(continent)),
+    rf_OOB_output(data_fit_mtry33,'mtry33', covid %>% pull(continent)),
+    rf_OOB_output(data_fit_mtry67,'mtry67', covid %>% pull(contient))
+)
+
+
+data_rf_OOB_output %>% 
+    group_by(model) %>%
+    accuracy(truth = continent, estimate = .pred_contient)
+```
+```{r}
+# Preliminary Interpretation
+
+data_rf_OOB_output %>% 
+    group_by(model) %>%
+    accuracy(truth = continent, estimate = .pred_continent) %>%
+  mutate(mtry = as.numeric(stringr::str_replace(model,'mtry',''))) %>%
+  ggplot(aes(x = mtry, y = .estimate )) + 
+  geom_point() +
+  geom_line() +
+  theme_classic()
+```
+```{r}
+# Evaluating the forest
+
+data_fit_mtry8
+```
+```{r}
+rf_OOB_output(data_fit_mtry8,'mtry8', covid %>% pull(covid)) %>%
+    conf_mat(truth = continent, estimate= .pred_covid)
+```
+```{r}
+# Variable importance measures
+
+data_fit_mtry8 %>% 
+    extract_fit_engine() %>% 
+    vip(num_features = 30) + theme_classic() #based on impurity
+```
+
+
+```{r}
+data_wf_mtry8 %>% 
+  update_model(rf_spec %>% set_args(importance = "permutation")) %>% #based on permutation
+  fit(data = covid) %>% 
+    extract_fit_engine() %>% 
+    vip(num_features = 30) + theme_classic()
+```
+
+```{r}
+
+## pick important variables to visualize
+
+# ggplot(covid, aes(x = continent, y = NDVI)) +
+#     geom_violin() + theme_classic()
+# 
+# ggplot(covid, aes(x = continent, y = Bright)) +
+#     geom_violin() + theme_classic()
+# 
+# ggplot(covid, aes(x = continent, y = Mean_G)) +
+#     geom_violin() + theme_classic()
+# 
+# ggplot(covid, aes(x = continent, y = Mean_R)) +
+#     geom_violin() + theme_classic()
+# 
+# ggplot(covid, aes(x = continent, y = SD_G)) +
+#     geom_violin() + theme_classic()
+
+```
+
+
+
+## Classification - Methods
+
+1. **Indicate at least 2 different methods used to answer your classification research question.**
+2. **Describe what you did to evaluate the models explored.**
+3. **Indicate how you estimated quantitative evaluation metrics.**
+4. **Describe the goals / purpose of the methods used in the overall context of your research investigations.**
+
+## Classification - Results
+
+1. **Summarize your final model and justify your model choice (see below for ways to justify your choice)**.
+2. **Compare the different classification models tried in light of evaluation metrics, variable importance, and data context.**
+3. **Display evaluation metrics for different models in a clean, organized way. This display should include both the estimated metric as well as its standard deviation. (This won’t be available from OOB error estimation. If using OOB, don’t worry about reporting the SD.)**
+4. **Broadly summarize conclusions from looking at these evaluation metrics and their measures of uncertainty.**
+
+## Classification - Conclusions
+
+1. **Interpret evaluation metric(s) for the final model in context. Does the model show an acceptable amount of error?**
+2. **If using OOB error estimation, display the test (OOB) confusion matrix, and use it to interpret the strengths and weaknesses of the final model.**
+3. **Summarization should show evidence of acknowledging the data context in thinking about the sensibility of these results.**
