@@ -110,7 +110,7 @@ tune_output
 #autoplot(tune_output) + theme_classic()
 ```
 
-#### Choosing the final LASSO Logistic Model
+#### Inspecting the model 
 
 We will choose the final model whose CV AUC is within one standard error of the overall best metric. 
 
@@ -153,6 +153,54 @@ var_imp_data <- tibble(
 )
 var_imp_data %>% arrange(desc(var_imp))
 ```
+
+Based on the output above, the variables deemed the most important in predicting the continent based on how long they persisted in the LASSO algorithm as the penalty increased.
+
+#### Interpreting evaluation metrics
+
+We inspect the overall CV results for the "best" $\lambda$, and compute the no-information (NIR). 
+
+```{r}
+# CV results for "best lambda"
+tune_output %>%
+    collect_metrics() %>%
+    filter(penalty == best_se_penalty %>% pull(penalty))
+           
+# Count up the continent outcomes
+covid %>% count(continent) # Name of the outcome variable goes inside count()
+
+# Compute the NIR
+2788/(2788+1813)
+```
+
+The AUC for our model is ___. We want it to be as close to 1 as possible (an absolutely perfect classifier of continent). 
+
+#### Choosing a threshold and final model
+
+After using LASSO and balancing bias and variance, we use the final model to make predictions: 
+
+```{r}
+# Soft Predictions on Training Data
+final_output <- final_fit_se %>% predict(new_data = covid, type='prob') %>% bind_cols(covid)
+
+# FIX THIS
+final_output %>%
+  ggplot(aes(x = covid, y = .pred_spam)) +
+  geom_boxplot()
+
+# ROC curve of sensitivity and specificity
+final_output %>%
+    roc_curve(spam,.pred_spam,event_level = 'second') %>%
+    autoplot()
+```
+
+This ROC curve is ___. 
+
+Sensitivity is a measure of how often non-North-American continents are correctly predicted to be not North-America by our model. 
+
+Specificity is the measure of how North-American continents are correctly predicted as North-American by our model.
+
+In this data context, we care more about the true positive rate - sensitivity. A possible application of this is if a user of this data wants to predict a COVID outbreak by continent, in which case we want to correctly predict a continent.
 
 1. **Indicate at least 2 different methods used to answer your classification research question.**
 2. **Describe what you did to evaluate the models explored.**
