@@ -190,7 +190,7 @@ final_output %>%
 
 # ROC curve of sensitivity and specificity
 final_output %>%
-    roc_curve(spam,.pred_spam,event_level = 'second') %>%
+    roc_curve(covid,.pred_spam,event_level = 'second') %>%
     autoplot()
 ```
 
@@ -201,6 +201,55 @@ Sensitivity is a measure of how often non-North-American continents are correctl
 Specificity is the measure of how North-American continents are correctly predicted as North-American by our model.
 
 In this data context, we care more about the true positive rate - sensitivity. A possible application of this is if a user of this data wants to predict a COVID outbreak by continent, in which case we want to correctly predict a continent.
+
+Using the J index
+
+```{r}
+# thresholds in terms of reference level
+threshold_output <- final_output %>%
+    threshold_perf(truth = covid, estimate = .pred_not_spam, thresholds = seq(0,1,by=.01)) 
+
+# J-index v. threshold for not_spam
+threshold_output %>%
+    filter(.metric == 'j_index') %>%
+    ggplot(aes(x = .threshold, y = .estimate)) +
+    geom_line() +
+    labs(y = 'J-index', x = 'threshold') +
+    theme_classic()
+```
+
+```{r}
+threshold_output %>%
+    filter(.metric == 'j_index') %>%
+    arrange(desc(.estimate))
+```
+
+```{r}
+# Distance v. threshold for not_spam
+
+threshold_output %>%
+    filter(.metric == 'distance') %>%
+    ggplot(aes(x = .threshold, y = .estimate)) +
+    geom_line() +
+    labs(y = 'Distance', x = 'threshold') +
+    theme_classic()
+```
+
+```{r}
+threshold_output %>%
+    filter(.metric == 'distance') %>%
+    arrange(.estimate)
+```
+
+```{r}
+log_metrics <- metric_set(accuracy,sens,yardstick::spec)
+
+final_output %>%
+    mutate(.pred_class = make_two_class_pred(.pred_not_spam, levels(spam), threshold = .64)) %>%
+    log_metrics(truth = spam, estimate = .pred_class, event_level = 'second')
+```
+
+
 
 1. **Indicate at least 2 different methods used to answer your classification research question.**
 2. **Describe what you did to evaluate the models explored.**
