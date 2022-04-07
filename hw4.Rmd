@@ -73,6 +73,10 @@ We initially try a sequence of 100 $\lambda$'s from 1 to 10, which we then adjus
 
 ```{r}
 # Set reference level (to the outcome you are NOT interested in)
+
+covid %>% 
+  mutate(North_or_Not = )
+
 covid <- covid %>%
   mutate(continent = relevel(factor(continent), ref = 'North_America'))
 
