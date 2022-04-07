@@ -38,11 +38,22 @@ conflicted::conflict_prefer("vi", "vip")
 # read in data
 covid <- read_csv("owid-covid-data.csv")
 ```
+```{r}
+nafun <- function(x) {
+  
+}
+```
+
 
 ```{r}
 # data cleaning
 covid <- covid %>%
   filter(date >= as.Date("2021-08-13"))%>%
+  select(-icu_patients, -icu_patients_per_million, -hosp_patients, -hosp_patients_per_million, -weekly_icu_admissions, -weekly_icu_admissions_per_million, -weekly_hosp_admissions, -weekly_hosp_admissions_per_million, -total_tests, -total_tests_per_thousand, -new_tests_smoothed, -new_tests_smoothed_per_thousand, -handwashing_facilities, -excess_mortality_cumulative_absolute, -excess_mortality_cumulative, -excess_mortality, -excess_mortality_cumulative_per_million, -male_smokers, -female_smokers, -hospital_beds_per_thousand, -extreme_poverty)
+```
+
+```{r}
+covid <- covid %>%
   na.omit(covid) %>%
   filter(continent %in% c("North America", "Asia", "South America", "Africa", "Europe")) %>%
   mutate(continent = factor(continent))
@@ -73,6 +84,7 @@ rf_spec <- rand_forest() %>%
   set_mode('classification') # change this for regression tree
 
 # Recipe
+
 rf_rec <- recipe(continent ~ ., data = covid)
 
 # Workflows
@@ -81,16 +93,16 @@ data_wf_mtry2 <- workflow() %>%
   add_recipe(rf_rec)
 
 # Create workflows for mtry = 8, 33, and 67
-data_wf_mtry8 <- workflow() %>%
-  add_model(rf_spec %>% set_args(mtry = 8)) %>%
+data_wf_mtry7 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 7)) %>%
   add_recipe(rf_rec)
 
-data_wf_mtry33 <- workflow() %>%
-  add_model(rf_spec %>% set_args(mtry = 33)) %>%
+data_wf_mtry23 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 23)) %>%
   add_recipe(rf_rec)
 
-data_wf_mtry67 <- workflow() %>%
-  add_model(rf_spec %>% set_args(mtry = 67)) %>%
+data_wf_mtry45 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 45)) %>%
   add_recipe(rf_rec)
 ```
 
@@ -101,13 +113,13 @@ set.seed(123) # make sure to run this before each fit so that you have the same 
 data_fit_mtry2 <- fit(data_wf_mtry2, data = covid)
 
 set.seed(123)
-data_fit_mtry8 <- fit(data_wf_mtry8, data = covid)
+data_fit_mtry7 <- fit(data_wf_mtry7, data = covid)
 
 set.seed(123) 
-data_fit_mtry33 <- fit(data_wf_mtry33, data = covid)
+data_fit_mtry23 <- fit(data_wf_mtry23, data = covid)
 
 set.seed(123)
-data_fit_mtry67 <- fit(data_wf_mtry67, data = covid)
+data_fit_mtry45 <- fit(data_wf_mtry45, data = covid)
 ```
 ```{r}
 # Custom Function to get OOB predictions, true observed outcomes and add a model label
@@ -130,13 +142,13 @@ data_rf_OOB_output <- bind_rows(
     rf_OOB_output(data_fit_mtry2,'mtry2', covid %>% pull(continent)),
     rf_OOB_output(data_fit_mtry8,'mtry8', covid %>% pull(continent)),
     rf_OOB_output(data_fit_mtry33,'mtry33', covid %>% pull(continent)),
-    rf_OOB_output(data_fit_mtry67,'mtry67', covid %>% pull(contient))
+    rf_OOB_output(data_fit_mtry67,'mtry67', covid %>% pull(continent))
 )
 
 
 data_rf_OOB_output %>% 
     group_by(model) %>%
-    accuracy(truth = continent, estimate = .pred_contient)
+    accuracy(truth = continent, estimate = .pred_continent)
 ```
 ```{r}
 # Preliminary Interpretation
@@ -153,23 +165,23 @@ data_rf_OOB_output %>%
 ```{r}
 # Evaluating the forest
 
-data_fit_mtry8
+data_fit_mtry7
 ```
 ```{r}
-rf_OOB_output(data_fit_mtry8,'mtry8', covid %>% pull(covid)) %>%
-    conf_mat(truth = continent, estimate= .pred_covid)
+rf_OOB_output(data_fit_mtry7,'mtry7', covid %>% pull(continent)) %>%
+    conf_mat(truth = continent, estimate= .pred_continent)
 ```
 ```{r}
 # Variable importance measures
 
-data_fit_mtry8 %>% 
+data_fit_mtry7 %>% 
     extract_fit_engine() %>% 
     vip(num_features = 30) + theme_classic() #based on impurity
 ```
 
 
 ```{r}
-data_wf_mtry8 %>% 
+data_wf_mtry7 %>% 
   update_model(rf_spec %>% set_args(importance = "permutation")) %>% #based on permutation
   fit(data = covid) %>% 
     extract_fit_engine() %>% 
