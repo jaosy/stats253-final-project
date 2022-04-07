@@ -69,11 +69,12 @@ We initially try a sequence of 100 $\lambda$'s from 1 to 10, which we then adjus
 
 Since we can only perform binominal logistic regression, we had to create a new variable, `NorthAmerica_or_Not`, categorizing the data based on whether its `continent` was "North America" or not. This new variable will be the outcome we try to predict using this method, setting the reference level as not North America.
 
+To fit the model, we had to remove `date` and `continent` as predictors, since their formats did not work with the engine.
+
 ```{r}
 # Create new binary variable
 covid <-covid %>% 
   mutate(NorthAmerica_or_Not = ifelse(continent == 'North America', 'North_America', 'Not_North_America'))
-
 
 # Set reference level (to the outcome you are NOT interested in)
 covid <- covid %>%
@@ -109,9 +110,11 @@ tune_output <- tune_grid(
 )
 
 tune_output
+
 # Visualize Model Evaluation Metrics from Tuning
-#autoplot(tune_output) + theme_classic()
+autoplot(tune_output) + theme_classic()
 ```
+
 
 #### Inspecting the model 
 
@@ -130,8 +133,10 @@ final_fit_se %>% tidy() %>%
   filter(estimate == 0)
 ```
 With the set of penalty values that we used, the following variables had their coefficients set to 0:
+- `total_cases`
+- `people_fully_vaccinated_per_hundred`
 
-It turns out that these variables were not important in predicting the continent, after accounting for the other features in the model.
+Apparently, the total number of cases and number of people fully vaccinated per hundred were not that important in predicting whether or not an observation originated from North America or not, after accounting for the other features in the model.
 
 Here we will look at how long a variable stayed in the model as a measure of variable importance:
 
@@ -157,7 +162,9 @@ var_imp_data <- tibble(
 var_imp_data %>% arrange(desc(var_imp))
 ```
 
-Based on the output above, the variables deemed the most important in predicting the continent based on how long they persisted in the LASSO algorithm as the penalty increased.
+Based on the output above, the variables deemed the most important in predicting the continent based on how long they persisted in the LASSO algorithm as the penalty increased. 
+
+Surprisingly, `total_cases` and `people_fully_vaccinated_per_hundred` *are* important!
 
 #### Interpreting evaluation metrics
 
@@ -170,13 +177,15 @@ tune_output %>%
     filter(penalty == best_se_penalty %>% pull(penalty))
            
 # Count up the continent outcomes
-covid %>% count(continent) # Name of the outcome variable goes inside count()
+covid %>% count(NorthAmerica_or_Not) # Name of the outcome variable goes inside count()
 
 # Compute the NIR
-2788/(2788+1813)
+2596/(2596+325)
 ```
 
-The AUC for our model is ___. We want it to be as close to 1 as possible (an absolutely perfect classifier of continent). 
+The relative frequency of the majority class is 0.89, meaning 89% of our observations originate from outside of North America. 
+
+The AUC for our model is 1.0! Apparently, our model is a perfect classifier of whether or not a case originated from North America!
 
 #### Choosing a threshold and final model
 
@@ -188,29 +197,27 @@ final_output <- final_fit_se %>% predict(new_data = covid, type='prob') %>% bind
 
 # FIX THIS
 final_output %>%
-  ggplot(aes(x = covid, y = .pred_spam)) +
+  ggplot(aes(x = NorthAmerica_or_Not, y = .pred_North_America)) +
   geom_boxplot()
 
 # ROC curve of sensitivity and specificity
 final_output %>%
-    roc_curve(covid,.pred_spam,event_level = 'second') %>%
+    roc_curve(NorthAmerica_or_Not,.pred_North_America,event_level = 'second') %>%
     autoplot()
 ```
 
-This ROC curve is ___. 
+This ROC curve is 1.0! Apparently, our model is a perfect classifier with sensitivity of 1. 
 
 Sensitivity is a measure of how often non-North-American continents are correctly predicted to be not North-America by our model. 
 
 Specificity is the measure of how North-American continents are correctly predicted as North-American by our model.
 
-In this data context, we care more about the true positive rate - sensitivity. A possible application of this is if a user of this data wants to predict a COVID outbreak by continent, in which case we want to correctly predict a continent.
-
-Using the J index
+We can also caluclate the J index:
 
 ```{r}
 # thresholds in terms of reference level
 threshold_output <- final_output %>%
-    threshold_perf(truth = covid, estimate = .pred_not_spam, thresholds = seq(0,1,by=.01)) 
+    threshold_perf(truth = NorthAmerica_or_Not, estimate = .pred_North_America, thresholds = seq(0,1,by=.01)) 
 
 # J-index v. threshold for not_spam
 threshold_output %>%
@@ -228,7 +235,7 @@ threshold_output %>%
 ```
 
 ```{r}
-# Distance v. threshold for not_spam
+# Distance v. threshold for not_North_America
 
 threshold_output %>%
     filter(.metric == 'distance') %>%
@@ -248,11 +255,15 @@ threshold_output %>%
 log_metrics <- metric_set(accuracy,sens,yardstick::spec)
 
 final_output %>%
-    mutate(.pred_class = make_two_class_pred(.pred_not_spam, levels(spam), threshold = .64)) %>%
-    log_metrics(truth = spam, estimate = .pred_class, event_level = 'second')
+    mutate(.pred_class = make_two_class_pred(.pred_Not_North_America, levels(NorthAmerica_or_Not), threshold = .64)) %>%
+    log_metrics(truth = NorthAmerica_or_Not, estimate = .pred_class, event_level = 'second')
 ```
 
+99% of COVID case classifications into North America or not are expected to be correct under this model - wow!
 
+Our NIR is 88%, so our model performs better and is actually almost 100% accurate...! However, most of our cases do not actually originate from North America...
+
+### Prompts 
 
 1. **Indicate at least 2 different methods used to answer your classification research question.**
 2. **Describe what you did to evaluate the models explored.**
