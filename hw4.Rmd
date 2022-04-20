@@ -53,12 +53,6 @@ covid <- covid %>%
     - `median_age`
     - `gdp_per_capita`
 
-```{r}
-# creation of cv folds
-set.seed(123)
-covid_cv10 <- vfold_cv(covid, v = 10)
-```
-
 ## Classification - Methods
 
 ### LASSO Logistic Regression 
@@ -79,6 +73,10 @@ covid <-covid %>%
 # Set reference level (to the outcome you are NOT interested in)
 covid <- covid %>%
   mutate(NorthAmerica_or_Not = relevel(factor(NorthAmerica_or_Not), ref='Not_North_America')) #set reference level
+
+# creation of cv folds
+set.seed(123)
+covid_cv10 <- vfold_cv(covid, v = 10)
 
 # Logistic LASSO Regression Model Spec
 logistic_lasso_spec_tune <- logistic_reg() %>%
@@ -108,8 +106,6 @@ tune_output <- tune_grid(
   control = control_resamples(save_pred = TRUE, event_level = 'second'),
   grid = penalty_grid # penalty grid defined above
 )
-
-tune_output
 
 # Visualize Model Evaluation Metrics from Tuning
 autoplot(tune_output) + theme_classic()
@@ -262,6 +258,34 @@ final_output %>%
 99% of COVID case classifications into North America or not are expected to be correct under this model - wow!
 
 Our NIR is 88%, so our model performs better and is actually almost 100% accurate...! However, most of our cases do not actually originate from North America...
+
+## Clustering (homework 5)
+
+In the code below, we construct a dendrogram using the quantitative variables in our dataset to predict whether or not a case originates from North America. This approach is a visual way to explore clustering and how clusters form from grouping on the quantitative characteristics of the countries where cases were recorded, e.g. the tests per case. If the clustering didn't 
+
+```{r}
+# Random subsample of 50 cases
+set.seed(123)
+
+covid <- covid %>%
+  slice_sample(n = 100)
+
+# ASK BRYAN: SHOULD WE FIX THE DATE 
+# select the variables to be used in clustering
+
+covid_sub <- covid %>% 
+  select(total_cases, people_fully_vaccinated_per_hundred)
+
+na.omit(covid_sub)
+
+# Run k-means for k = centers = 6
+kclust_k3 <- kmeans(covid_sub, centers = 6)
+
+# Add a variable (kclust_k3) to the original dataset 
+# containing the cluster assignments
+penguins <- penguins %>%
+    mutate(kclust_3 = factor(kclust_k3$cluster))
+```
 
 ### Prompts 
 
