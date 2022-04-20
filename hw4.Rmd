@@ -204,11 +204,11 @@ final_output %>%
 
 This ROC curve is 1.0! Apparently, our model is a perfect classifier with sensitivity of 1. 
 
-Sensitivity is a measure of how often non-North-American continents are correctly predicted to be not North-America by our model. 
+Sensitivity is the measure of how North-American continents are correctly predicted as North-American by our model. 
 
-Specificity is the measure of how North-American continents are correctly predicted as North-American by our model.
+Specificity is measure of how often non-North-American continents are correctly predicted to be not North-America by our model. 
 
-We can also caluclate the J index:
+We can also calculate the J index:
 
 ```{r}
 # thresholds in terms of reference level

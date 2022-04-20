@@ -49,7 +49,9 @@ nafun <- function(x) {
 # data cleaning
 covid <- covid %>%
   filter(date >= as.Date("2021-08-13"))%>%
-  select(-icu_patients, -icu_patients_per_million, -hosp_patients, -hosp_patients_per_million, -weekly_icu_admissions, -weekly_icu_admissions_per_million, -weekly_hosp_admissions, -weekly_hosp_admissions_per_million, -total_tests, -total_tests_per_thousand, -new_tests_smoothed, -new_tests_smoothed_per_thousand, -handwashing_facilities, -excess_mortality_cumulative_absolute, -excess_mortality_cumulative, -excess_mortality, -excess_mortality_cumulative_per_million, -male_smokers, -female_smokers, -hospital_beds_per_thousand, -extreme_poverty)
+  select(-icu_patients, -icu_patients_per_million, -hosp_patients, -hosp_patients_per_million, -weekly_icu_admissions, -weekly_icu_admissions_per_million, -weekly_hosp_admissions, -weekly_hosp_admissions_per_million, -total_tests, -total_tests_per_thousand, -new_tests_smoothed, -new_tests_smoothed_per_thousand, -handwashing_facilities, -excess_mortality_cumulative_absolute, -excess_mortality_cumulative, -excess_mortality, -excess_mortality_cumulative_per_million, -male_smokers, -female_smokers, -hospital_beds_per_thousand, -extreme_poverty, -location)
+
+# SHOULD WE REMOVE LOCATION?
 ```
 
 ```{r}
@@ -92,17 +94,17 @@ data_wf_mtry2 <- workflow() %>%
   add_model(rf_spec %>% set_args(mtry = 2)) %>%
   add_recipe(rf_rec)
 
-# Create workflows for mtry = 8, 33, and 67
+# Create workflows for mtry = 7, 22, and 44
 data_wf_mtry7 <- workflow() %>%
   add_model(rf_spec %>% set_args(mtry = 7)) %>%
   add_recipe(rf_rec)
 
-data_wf_mtry23 <- workflow() %>%
-  add_model(rf_spec %>% set_args(mtry = 23)) %>%
+data_wf_mtry22 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 22)) %>%
   add_recipe(rf_rec)
 
-data_wf_mtry45 <- workflow() %>%
-  add_model(rf_spec %>% set_args(mtry = 45)) %>%
+data_wf_mtry44 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 44)) %>%
   add_recipe(rf_rec)
 ```
 
@@ -116,11 +118,12 @@ set.seed(123)
 data_fit_mtry7 <- fit(data_wf_mtry7, data = covid)
 
 set.seed(123) 
-data_fit_mtry23 <- fit(data_wf_mtry23, data = covid)
+data_fit_mtry22 <- fit(data_wf_mtry22, data = covid)
 
 set.seed(123)
-data_fit_mtry45 <- fit(data_wf_mtry45, data = covid)
+data_fit_mtry44 <- fit(data_wf_mtry44, data = covid)
 ```
+
 ```{r}
 # Custom Function to get OOB predictions, true observed outcomes and add a model label
 rf_OOB_output <- function(fit_model, model_label, truth){
@@ -140,9 +143,9 @@ rf_OOB_output(data_fit_mtry2,'mtry2', covid %>% pull(continent))
 
 data_rf_OOB_output <- bind_rows(
     rf_OOB_output(data_fit_mtry2,'mtry2', covid %>% pull(continent)),
-    rf_OOB_output(data_fit_mtry8,'mtry8', covid %>% pull(continent)),
-    rf_OOB_output(data_fit_mtry33,'mtry33', covid %>% pull(continent)),
-    rf_OOB_output(data_fit_mtry67,'mtry67', covid %>% pull(continent))
+    rf_OOB_output(data_fit_mtry7,'mtry7', covid %>% pull(continent)),
+    rf_OOB_output(data_fit_mtry22,'mtry22', covid %>% pull(continent)),
+    rf_OOB_output(data_fit_mtry44,'mtry44', covid %>% pull(continent))
 )
 
 
@@ -162,15 +165,18 @@ data_rf_OOB_output %>%
   geom_line() +
   theme_classic()
 ```
+
 ```{r}
 # Evaluating the forest
 
 data_fit_mtry7
 ```
+
 ```{r}
 rf_OOB_output(data_fit_mtry7,'mtry7', covid %>% pull(continent)) %>%
     conf_mat(truth = continent, estimate= .pred_continent)
 ```
+
 ```{r}
 # Variable importance measures
 
@@ -192,20 +198,20 @@ data_wf_mtry7 %>%
 
 ## pick important variables to visualize
 
-# ggplot(covid, aes(x = continent, y = NDVI)) +
-#     geom_violin() + theme_classic()
-# 
-# ggplot(covid, aes(x = continent, y = Bright)) +
-#     geom_violin() + theme_classic()
-# 
-# ggplot(covid, aes(x = continent, y = Mean_G)) +
-#     geom_violin() + theme_classic()
-# 
-# ggplot(covid, aes(x = continent, y = Mean_R)) +
-#     geom_violin() + theme_classic()
-# 
-# ggplot(covid, aes(x = continent, y = SD_G)) +
-#     geom_violin() + theme_classic()
+ggplot(covid, aes(x = continent, y = aged_70_older)) +
+    geom_violin() + theme_classic()
+
+ggplot(covid, aes(x = continent, y = total_vaccinations_per_hundred)) +
+    geom_violin() + theme_classic()
+
+ggplot(covid, aes(x = continent, y = total_deaths_per_million)) +
+    geom_violin() + theme_classic()
+
+ggplot(covid, aes(x = continent, y = total_cases)) +
+    geom_violin() + theme_classic()
+
+ggplot(covid, aes(x = continent, y = new_deaths_smoothed)) +
+    geom_violin() + theme_classic()
 
 ```
 
