@@ -251,11 +251,11 @@ threshold_output %>%
 log_metrics <- metric_set(accuracy,sens,yardstick::spec)
 
 final_output %>%
-    mutate(.pred_class = make_two_class_pred(.pred_Not_North_America, levels(NorthAmerica_or_Not), threshold = .64)) %>%
+    mutate(.pred_class = make_two_class_pred(.pred_Not_North_America, levels(NorthAmerica_or_Not), threshold = .98)) %>%
     log_metrics(truth = NorthAmerica_or_Not, estimate = .pred_class, event_level = 'second')
 ```
 
-99% of COVID case classifications into North America or not are expected to be correct under this model - wow!
+95% of COVID case classifications into North America or not are expected to be correct under this model - wow!
 
 Our NIR is 88%, so our model performs better and is actually almost 100% accurate...! However, most of our cases do not actually originate from North America...
 
