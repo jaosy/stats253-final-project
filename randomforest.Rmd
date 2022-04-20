@@ -220,19 +220,56 @@ ggplot(covid, aes(x = continent, y = new_deaths_smoothed)) +
 ## Classification - Methods
 
 1. **Indicate at least 2 different methods used to answer your classification research question.**
+
+Used logistic regression and random forests.
+
 2. **Describe what you did to evaluate the models explored.**
 3. **Indicate how you estimated quantitative evaluation metrics.**
+
+For the logistic regression, we inspected the overall cross-validation results to determine the best lambda. We also determined the no-information-rate (NIR), which was 89%, meaning in this case that 89% of our cases represented "false (non-North America)" values. We also used the ROC curve to plot sensitivity (rate of true positive, predicting North American cases and North American) and specificity (true negative rate, predicting non-North-American cases as non-North American) of the overall model. It returned an ROC of 1, meaning it has essentially perfect prediction. Finally, we evaluated the model accuracy measure from our logistic quantitative output, which equaled .95, suggesting 95% predictive accuracy. 
+
+For the decision tree, we used out-of-bag error (OOB) and the test confusion matrix. Our OOB returned as .02%, meaning the our model makes the wrong hard classification .02% of the time, which in our test confusion matrix is shown to be one wrong prediction. This suggests that the tree model has a 99.98% accuracy, making it slightly more accurate than the logistic model. However, this difference is within 5% accuracy, suggesting that either model could offer high predictive power in this research context. 
+
+
 4. **Describe the goals / purpose of the methods used in the overall context of your research investigations.**
+
+These methods were employed to predict the origin continent of each case.
 
 ## Classification - Results
 
 1. **Summarize your final model and justify your model choice (see below for ways to justify your choice)**.
 2. **Compare the different classification models tried in light of evaluation metrics, variable importance, and data context.**
+
+
+These models also differ by metrics and variable importance. In the logistic regression, total cases, people vaccinated per hundred, and ICU patients proved to be among the most important variables. This is in contrast to the random forest model, which finds population age to generally be the most important predictor of new COVID cases.
+
+We have selected the random forest model. This operates as a bagged decision tree, and can predict which continent each case is from. We selected this model for two reasons. First, and most importantly, this model can predict each content specifically, whereas the logistic model is restricted to a binary outcome of North America/Not North America. This a critical difference, as it allows for much more specific predictions within this data context. Secondly, this model has a slightly higher accuracy rating of 4.98%.
+
+
+
+
+
 3. **Display evaluation metrics for different models in a clean, organized way. This display should include both the estimated metric as well as its standard deviation. (This won’t be available from OOB error estimation. If using OOB, don’t worry about reporting the SD.)**
+
+all are listed above except standard deviation (ASK BRYAN DO NOT LEAVE THIS WHEN SUBMITTING)
 4. **Broadly summarize conclusions from looking at these evaluation metrics and their measures of uncertainty.**
+
+Overall the random forest model produces a more accurate prediction with fewer errors, and (ADD STANDARD DEVIATION STUFF HERE). The variables used are also different, focusing more on population demographic data than COVID data specifically. Finally, within the study context, this model also makes more sense due to the specificity of outcome it can offer via multiple-continent outcomes.  
 
 ## Classification - Conclusions
 
 1. **Interpret evaluation metric(s) for the final model in context. Does the model show an acceptable amount of error?**
+
+The model has an extremely low level of error, predicting results with 99.98% accuracy. This is far above any degree of predictive ability that could be expected, and is certainly an acceptable amount of error, especially considering the relatively low-stakes context of this study. 
+
 2. **If using OOB error estimation, display the test (OOB) confusion matrix, and use it to interpret the strengths and weaknesses of the final model.**
+
+```{r}
+rf_OOB_output(data_fit_mtry7,'mtry7', covid %>% pull(continent)) %>%
+    conf_mat(truth = continent, estimate= .pred_continent)
+```
+
+Here, we see that only one case has been incorrectly predicted in the training data, demonstrating the extreme predictive ability of this random forest model. 
 3. **Summarization should show evidence of acknowledging the data context in thinking about the sensibility of these results.**
+
+Overall, this model predicts with almost flawless accuracy the continent that each case of COVID data was collected in. In the context of this data, as well as the type of work which could draw on these findings, this model has successfully achieved its desired outcome. For medical professionals hoping to understand explanatory factors of COVID spread, or governments seeking to determine regional variation in explanatory factors, this model can provide direction with confidence.
