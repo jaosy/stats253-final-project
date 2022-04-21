@@ -259,7 +259,7 @@ final_output %>%
 
 Our NIR is 88%, so our model performs better and is actually almost 100% accurate...! However, most of our cases do not actually originate from North America...
 
-## Clustering (homework 5)
+## K-means Clustering
 
 In the code below, we construct a dendrogram using the quantitative variables in our dataset to predict whether or not a case originates from North America. This approach is a visual way to explore clustering and how clusters form from grouping on the quantitative characteristics of the countries where cases were recorded, e.g. the tests per case. If the clustering didn't 
 
@@ -270,24 +270,85 @@ set.seed(123)
 covid <- covid %>%
   slice_sample(n = 100)
 
-# ASK BRYAN: SHOULD WE FIX THE DATE 
 # select the variables to be used in clustering
 
 covid_sub <- covid %>% 
   select(total_cases, people_fully_vaccinated_per_hundred)
+```
 
-na.omit(covid_sub)
+### Picking k
 
+The **Elbow Method** is based on the visualization below. We pick the $k$ that corresponds to the bend in the curve (the "elbow") such that you are minimizing total within-cluster sum of squares while keeping the number of clusters small (simpler, more interpretable).
+
+This enables us to pick $k$ using a data-driven approach. We would be comparing the **total squared distance of each case from its assigned centroid** for different values of $k$. (This measure is available within the `$tot.withinss` component of objects resulting from `kmeans()`.)
+
+Based on the visualization below, we pick $k = 6$. After this, there is not as much meaningful decrease in heterogeneity (dissimilarity).
+
+This makes a lot of sense because there are 6 continents where cases are observed in the data set.
+```{r}
+# Data-specific function to cluster and calculate total within-cluster SS
+covid_cluster_ss <- function(k){
+    # Perform clustering
+    kclust <- kmeans(scale(covid_sub), centers = k)
+
+    # Return the total within-cluster sum of squares
+    return(kclust$tot.withinss)
+}
+
+tibble(
+    k = 1:15,
+    tot_wc_ss = purrr::map_dbl(1:15, covid_cluster_ss)
+) %>% 
+    ggplot(aes(x = k, y = tot_wc_ss)) +
+    geom_point() + 
+    labs(x = "Number of clusters",y = 'Total within-cluster sum of squares') + 
+    theme_classic()
+```
+
+### Cluster interpretation
+
+```{r}
+# Perform clustering: should you use scale()?
+set.seed(123)
+kclust_k6_2vars <- kmeans(scale(covid_sub), centers = 6)
+
+covid <- covid %>%
+    mutate(kclust_6_2vars = factor(kclust_k6_2vars$cluster))
+
+
+covid %>%
+  count(continent,kclust_6_2vars)
+
+covid %>%
+    group_by(kclust_6_2vars) %>%
+    summarize(across(c(total_cases, people_fully_vaccinated_per_hundred), mean))
+```
+
+Group 3 has the highest mean total cases and the second lowest mean total vaccination rate. Group 5 could be named low case rate and low vaccination rate as it has the lowest number of total cases and the lowest rate of people fully vaccinated. Group 6 has the highest number of people fully vaccinated per hundred but also has the third lowest total cases which is surprising to us but this is indicative that other factors can affect clustering. 
+
+### Clustering Visualization
+
+```{r}
 # Run k-means for k = centers = 6
-kclust_k3 <- kmeans(covid_sub, centers = 6)
+kclust_k6 <- kmeans(scale(covid_sub), centers = 6)
 
 # Add a variable (kclust_k3) to the original dataset 
 # containing the cluster assignments
-penguins <- penguins %>%
-    mutate(kclust_3 = factor(kclust_k3$cluster))
+covid_sub <- covid_sub %>%
+    mutate(kclust_6 = factor(kclust_k6$cluster))
+
+# Visualize the cluster assignments on the original scatterplot
+ggplot(covid_sub, aes(x = total_cases, y = people_fully_vaccinated_per_hundred, color = kclust_6)) +
+    geom_point() + 
+    theme_classic()
 ```
 
-### Prompts 
+### Clustering Evalution
+
+- The two features we chose in the clustering were `total_cases` and `people_fully_vaccinated_per_hundred`. We chose these variables because the variable importance calculation from the LASSO logistic regression done previously picked these two variables as the most important. Aditionally, the clustering can only be done for quantitative variables since we are able to measure the distance between them.
+- It looks like there are 6 clusters with varying vaccination rate per hundred people and total number of cases.
+
+## Homework Prompts
 
 1. **Indicate at least 2 different methods used to answer your classification research question.**
 2. **Describe what you did to evaluate the models explored.**
