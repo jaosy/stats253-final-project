@@ -270,7 +270,6 @@ set.seed(123)
 covid <- covid %>%
   slice_sample(n = 100)
 
-# ASK BRYAN: SHOULD WE FIX THE DATE 
 # select the variables to be used in clustering
 
 covid_sub <- covid %>% 
