@@ -57,7 +57,7 @@ covid <- covid %>%
 ```{r}
 covid <- covid %>%
   na.omit(covid) %>%
-  filter(continent %in% c("North America", "Asia", "South America", "Africa", "Europe")) %>%
+  filter(continent %in% c("North America", "Asia", "South America", "Africa", "Europe", "Oceania")) %>%
   mutate(continent = factor(continent))
 ```
 

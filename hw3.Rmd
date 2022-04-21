@@ -683,7 +683,7 @@ gam_mod2 <- fit(gam_spec,
 )
 
 gam_mod2 %>% pluck('fit') %>% summary() 
-gam_mod2 %>% pluck('fit') %>% plot(all.terms = TRUE, pages=1)
+gam_mod2 %>% pluck('fit') %>% plot()
 ``` 
 
 
