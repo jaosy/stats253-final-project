@@ -57,7 +57,7 @@ covid <- covid %>%
 ```{r}
 covid <- covid %>%
   na.omit(covid) %>%
-  filter(continent %in% c("North America", "Asia", "South America", "Africa", "Europe")) %>%
+  filter(continent %in% c("North America", "Asia", "South America", "Africa", "Europe", "Oceania")) %>%
   mutate(continent = factor(continent))
 ```
 
@@ -226,7 +226,7 @@ Used logistic regression and random forests.
 2. **Describe what you did to evaluate the models explored.**
 3. **Indicate how you estimated quantitative evaluation metrics.**
 
-For the logistic regression, we inspected the overall cross-validation results to determine the best lambda. We also determined the no-information-rate (NIR), which was 89%, meaning in this case that 89% of our cases represented "false (non-North America)" values. We also used the ROC curve to plot sensitivity (rate of true positive, predicting North American cases and North American) and specificity (true negative rate, predicting non-North-American cases as non-North American) of the overall model. It returned an ROC of 1, meaning it has essentially perfect prediction. Finally, we evaluated the model accuracy measure from our logistic quantitative output, which equaled .95, suggesting 95% predictive accuracy. 
+For the logistic regression, we inspected the overall cross-validation results to determine the best lambda. We also determined the no-information-rate (NIR), which was 89%, meaning in this case that 89% of our cases represented "false (non-North America)" values. We also used the ROC curve to plot sensitivity (rate of true positive, predicting North American cases and North American) and specificity (true negative rate, predicting non-North-American cases as non-North American) of the overall model. It returned an ROC of 1 with a stardard deviation of 0, meaning it has essentially perfect prediction. Finally, we evaluated the model accuracy measure from our logistic quantitative output, which equaled .95, with a one standard deviation estimate of +-0.00137, suggesting strong 95% predictive accuracy. 
 
 For the decision tree, we used out-of-bag error (OOB) and the test confusion matrix. Our OOB returned as .02%, meaning the our model makes the wrong hard classification .02% of the time, which in our test confusion matrix is shown to be one wrong prediction. This suggests that the tree model has a 99.98% accuracy, making it slightly more accurate than the logistic model. However, this difference is within 5% accuracy, suggesting that either model could offer high predictive power in this research context. 
 
