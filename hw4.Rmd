@@ -345,7 +345,7 @@ ggplot(covid_sub, aes(x = total_cases, y = people_fully_vaccinated_per_hundred, 
 
 ### Clustering Evalution
 
-- The two features we chose in the clustering were `total_cases` and `people_fully_vaccinated_per_hundred`. We chose these variables because the variable importance calculation from the LASSO logistic regression done previously picked these two variables as the most important. Aditionally, the clustering can only be done for quantitative variables since we are able to measure the distance between them.
+- The two features we chose in the clustering were `total_cases` and `people_fully_vaccinated_per_hundred`. We chose these variables because the variable importance calculation from the LASSO logistic regression done previously picked these two variables as the most important. Additionally, the clustering can only be done for quantitative variables since we are able to measure the distance between them.
 - It looks like there are 6 clusters with varying vaccination rate per hundred people and total number of cases.
 
 ## Homework Prompts
