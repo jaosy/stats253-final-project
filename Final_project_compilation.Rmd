@@ -11,13 +11,13 @@ output:
     code_folding: "hide"
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, appendix = TRUE}
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE, warning = FALSE, message = FALSE, tidy = TRUE)
 ```
 
 # Introduction
 
-```{r}
+```{r, appendix = TRUE}
 # library statements 
 library(dplyr)
 library(readr)
@@ -32,22 +32,23 @@ library(ranger)
 tidymodels_prefer() # Resolves conflicts, prefers tidymodel functions
 ```
 
-  In this analysis, we utilize statistical machine learning techniques to study the spread of COVID-19 cases between August 13th, 2021 and January 27th, 2022, when we downloaded the source data. We selected this date range to focus on the prevalence of COVID-19 Delta and Omicron variants as disruptors in previously established COVID trend data, and hope that with this research we may contribute to a growing understanding of what factors lead to COVID spread. Additionally, a later analysis seeks to illuminate how case trends cluster across different locations, further developing COVID-spread as a geographically heterogeneous phenomenon. 
+In this analysis, we utilize statistical machine learning techniques to study the spread of COVID-19 cases between August 13th, 2021 and January 27th, 2022, when we downloaded the source data. We selected this date range to best capture the current climate of the pandemic, selecting a date after vaccine boosters became available, and during when COVID-19 Delta and Omicron variants began disrupting previously established COVID trend data. We hope that with this research we may contribute to a growing understanding of what factors lead to COVID spread, and a later analysis seeks to illuminate how case trends cluster across different continents, further developing COVID-spread as a geographically heterogeneous phenomenon. 
   
-  Our analysis in this project centers around three research questions. Our first line of query utilizes a LASSO regression model to predict the quantity of new cases within the United States. Here, units represent individual predicted cases which may be explained by variation in the predictor variables detailed above. This first question seeks to understand what impacts the spread of COVID variants, addressing the core motivation of our research to expand this knowledge. Next, we used a random forest decision tree to classify global new case rate by continent. This was performed to understand how variation in new case rates in different regions of the world may vary in causal factors, seen here in how the model classifies cases. Ultimately, this section seeks to empower a better geographically-specific response. Finally, we built on this classification analysis by using K-means clustering to group observed international vaccination rates and total cases by continent. This was done in an effort to understand natural groups within the data, associated with case trends seen globally.
+Our analysis in this project centers around three research questions. Our first line of query utilizes a LASSO regression model to predict the quantity of new cases within the United States. Here, units represent individual predicted cases which may be explained by variation in the predictor variables detailed in the section on regression below. This first question seeks to understand what impacts the spread of COVID variants, addressing the core motivation of our research to expand this knowledge. Next, we used a random forest decision tree to classify country-level total case rate by continent. This was performed to understand how variation in new case rates in different regions of the world may vary in causal factors, seen here in how the model classifies cases. Ultimately, this section seeks to empower a better geographically-specific response to the pandemic. Finally, we built on this classification analysis by using K-means clustering to group observed international vaccination rates and total cases by continent. This was done in an effort to understand natural groups within the data, associated with case trends seen globally.
 
 ### Societal Impact
 
-These analyses focus on the COVID-19 pandemic which has resulted in widespread illness and death. The data reflects the very real tragedies of people around the world, and as such should be considered with gravity. These data have been collected in an anonymous way to respect the privacy of those they represent, and can be used in the important effort to understand better the spread of the disease. We do not anticipate incurring any societal harm through the use and analysis of this data. 
+These analyses focus on the COVID-19 pandemic which has resulted in widespread illness and death. The data reflects the very real tragedies of people around the world, and as such should be considered with gravity. These data have been collected in an anonymous way to respect the privacy of those they represent, and can be used in the important effort to better understand the spread and nature of the disease. We do not anticipate incurring any societal harm through the use and analysis of this data. 
 
 
 ### Data Cleaning
-```{r}
+```{r, appendix = TRUE}
 # read in data
 covid <- read_csv("owid-covid-data.csv")
 ```
-  A case in our dataset represents the covid data from the United States on a specific date within our date range. We chose to use only cases from the United States within this specific date range to minimize the number of NULL values in our dataset. The quantitative outcome variable for regression we are trying to predict is the number of new cases on any given day. We used 10 predictor variables: total_cases, new_cases, date, total_deaths, reproduction_rate, people_vaccinated_per_hundred, people_fully_vaccinated_per_hundred, total_boosters_per_hundred, tests_per_case, icu_patients and positive_rate. The data was collected by Our World in Data project from the official numbers from governments and health ministries worldwide in an effort to document and understand covid trends. 
-```{r}
+A case in our data set for regression represents the COVID data from the United States on a single day within our date range. We chose to use only cases from the United States within this specific date range to minimize the number of NULL values in our data set. The quantitative outcome variable for regression which we are trying to predict is the number of new cases on any given day. We used 10 predictor variables: `total_cases,` `new_cases,` `date,` `total_deaths,` `reproduction_rate,`
+`people_vaccinated_per_hundred,` `people_fully_vaccinated_per_hundred,` `total_boosters_per_hundred,` `tests_per_case,` `icu_patients` and `positive_rate.` The data was compiled by the Our World in Data project from the official numbers from governments and health ministries worldwide in an effort to document and understand COVID trends. 
+```{r, appendix = TRUE}
 # data cleaning
 covid <- covid %>% 
   filter(location == 'United States') %>%
@@ -55,21 +56,26 @@ covid <- covid %>%
   filter(date >= as.Date("2021-08-13"))%>%
   na.omit(covid)
 ```
-  Coming into this project, we suspect that there will be a strong negative correlation between vaccination metrics and the number of total cases that are reported in any location.
+Coming into this project, we suspect that there will be a strong negative correlation between vaccination metrics and the number of total cases that are reported in any location. This hypothesis is supported by a multitude of scientific studies showing the effectiveness of COVID-19 vaccines at “preventing infection, serious illness, and death” (Center for Disease Control, https://www.cdc.gov/coronavirus/2019-ncov/vaccines/effectiveness/why-measure-effectiveness/breakthrough-cases.html).  
 
 # Regression
 
-```{r}
+```{r, appendix = TRUE}
 # creation of cv folds
 set.seed(123)
 covid_cv10 <- vfold_cv(covid, v = 10)
 ```
 
-## Regression- Methods
+### Methods
+
+First, we implement regression models to predict the quantity of new cases reported within the United States, addressing our first research question. We tried Ordinary Least Squares and LASSO methods, using cross-validation and evaluative metrics including MAE and residual plots to identify the model that performs the best.  While we ultimately selected the LASSO model due to its slightly higher predictive ability, we also share some limited background of the OLS model to contextualize our final decision.
+
+
 
 ### OLS
  
-```{r}
+This section details the process completed to construct the OLS models, beginning with this feature coefficient estimate plot, and the following output table which provides an overview of metrics for the selected predictor variables.
+```{r, appendix = TRUE}
 # model spec
 # OLS
 lm_spec <-
@@ -145,7 +151,7 @@ cov_wf_ols5 <- workflow() %>%
 
 ```
 
-```{r}
+```{r, appendix = TRUE}
 mod1 %>% 
   tidy() %>% 
   slice(-1) %>% 
@@ -160,7 +166,9 @@ mod1 %>%
 mod1 %>%
   tidy()
 ```
-```{r}
+
+Next, we considered a variety of models, each consisting of a different selection of predictor variables. To gain an understanding of relative error rates of these models, we calculated the mean average error (MAE) for each, presented below.
+```{r, appendix = TRUE}
 mod1_output <- mod1 %>% 
     predict(new_data = covid) %>%
     bind_cols(covid) %>%
@@ -187,7 +195,7 @@ mod5_output <- mod5 %>%
     mutate(resid = new_cases - .pred)
 ```
 
-```{r}
+```{r, appendix = TRUE}
 mod1_output %>%
     mae(truth = new_cases, estimate = .pred)
 
@@ -204,7 +212,9 @@ mod5_output %>%
     mae(truth = new_cases, estimate = .pred)
 ```
 
-```{r, results='hide'}
+After receiving these error metrics, we examined residual plots to determine if there were any issues of systematic over- or under-estimation, seeking a standard distribution of residuals. As seen below, all variables presented generally flat residual lines—with some fanning among higher values—suggesting that while there were no major systematic issues with the model, it had difficulty predicting these higher values accurately. 
+
+```{r, results='hide', appendix = TRUE}
 #mod1
 # Hidden plots because we did not select model
 
@@ -269,7 +279,9 @@ grid.arrange(mod1_pfvph, mod1_tbph, mod1_tpc, mod1_date, nrow=2, ncol=2)
 mod1_icu
 ```
 
-```{r}
+However, when we examined for linearity, we discovered several instances where residual patterns suggested non-linear relationships. 
+
+```{r, appendix = TRUE}
 #mod2
 ggplot(mod2_output, aes(y=resid, x=reproduction_rate)) +
     geom_point() +
@@ -279,7 +291,7 @@ ggplot(mod2_output, aes(y=resid, x=reproduction_rate)) +
 
 ```
 
-```{r, results='hide'}
+```{r, results='hide', appendix = TRUE}
 # Hidden plots because we did not select model
 
 #mod3
@@ -297,7 +309,7 @@ ggplot(mod3_output, aes(y=resid, x=people_vaccinated_per_hundred)) +
 
 ```
 
-```{r, results='hide'}
+```{r, results='hide', appendix = TRUE}
 # Hidden plots because we did not select model
 
 #mod4
@@ -323,7 +335,7 @@ ggplot(mod4_output, aes(y=resid, x=people_fully_vaccinated_per_hundred)) +
 
 ```
 
-```{r, results='hide'}
+```{r, results='hide', appendix = TRUE}
 # Hidden plots because we did not select model
 #mod5
 ggplot(mod5_output, aes(y=resid, x=reproduction_rate)) +
@@ -353,9 +365,11 @@ ggplot(mod5_output, aes(y=resid, x=total_boosters_per_hundred)) +
 ```
 
 From the residual plots, it seems that `people_fully_vaccinated_per_hundred	`, `people_vaccinated_per_hundred` and	
-`total_boosters_per_hundred` are variables that look like they would be better modeled with nonlinear relationships.  
+`total_boosters_per_hundred` are variables that would be better modeled with nonlinear relationships.
 
-```{r}
+Finally, we calculated further metrics to consider these five models.
+
+```{r, appendix = TRUE}
 mod1_cv <- fit_resamples(cov_wf_ols,
   resamples = covid_cv10, 
   metrics = metric_set(rmse, rsq, mae))
@@ -382,7 +396,7 @@ mod5_cv <- fit_resamples(cov_wf_ols5,
 
 ```
 
-```{r}
+```{r, appendix = TRUE}
 
 mod1_cv %>% unnest(.metrics) %>%
   filter(.metric == 'rmse') %>%
@@ -419,7 +433,9 @@ mod5_cv %>% collect_metrics()
 
 ### LASSO
 
-```{r}
+After completing our OLS model, we focused on constructing a LASSO model to explore a different way of examining these associations. First, we attempted to estimate an ideal tuning parameter value, lambda, as seen in the plot below. 
+
+```{r, appendix = TRUE}
 # LASSO
 lm_lasso_spec <- 
   linear_reg() %>%
@@ -429,7 +445,7 @@ lm_lasso_spec <-
 
 ```
 
-```{r}
+```{r, appendix = TRUE}
 # recipes & workflows
 # specify Recipe (if you have preprocessing steps)
 
@@ -452,7 +468,7 @@ covid_wf_lasso <- workflow() %>%
   add_model(lm_lasso_spec)
 ```
 
-```{r}
+```{r, appendix = TRUE}
 # fit & tune models
 
 mod_lasso_fit <- fit(covid_wf_lasso, data = covid)
@@ -465,7 +481,7 @@ penalty_grid <- grid_regular(penalty(range = c(-5,3)), levels = 30)
 ```
 
 
-```{r}
+```{r, appendix = TRUE}
 
 tune_res <- tune_grid( # new function for tuning parameters
   covid_wf_lasso, # workflow
@@ -484,7 +500,9 @@ best_penalty <- select_best(tune_res, metric = 'mae') # choose penalty value bas
 best_se_penalty <- select_by_one_std_err(tune_res, metric = 'mae', desc(penalty)) # choose penalty value based on the largest penalty within 1 se of the lowest CV MAE
 ```
 
-```{r}
+Based on these outcomes, we selected a final model with the largest penalty within one standard error of the lowest cross-validated MAE.
+
+```{r, appendix = TRUE}
 #Fit Final Model
 final_wf <- finalize_workflow(covid_wf_lasso, best_penalty) # incorporates penalty value to workflow
 final_wf_se <- finalize_workflow(covid_wf_lasso, best_se_penalty) # incorporates penalty value to workflow
@@ -498,7 +516,7 @@ tidy(final_fit_se)
 
  
 
-```{r}
+```{r, appendix = TRUE}
 # visual residuals
 
 tune_res %>% collect_metrics() %>% filter(penalty == (best_se_penalty %>% pull(penalty)))
@@ -506,7 +524,9 @@ tune_res %>% collect_metrics() %>% filter(penalty == (best_se_penalty %>% pull(p
 
 ### Residual Plot of LASSO Model Prediction
 
-```{r}
+Next, we examined residuals within our final model. Here, we determined that the LASSO model was the best model for our data so far, because it had the lowest MAE compared to the other models we tried.
+
+```{r, appendix = TRUE}
 lasso_mod_out <- final_fit_se %>%
     predict(new_data = covid) %>%
     bind_cols(covid) %>%
@@ -520,9 +540,9 @@ lasso_mod_out %>%
   theme_classic()
 ```
 
-We determined that the LASSO model was the best model for our data so far, because it had the lowest MAE compared to the other models we tried. 
+ 
 
-```{r, results='hide'}
+```{r, results='hide', appendix = TRUE}
 # Hiding residual plots for model we did not choose
 
 pl1 <- ggplot(lasso_mod_out, aes(y=resid, x=total_cases)) +
@@ -590,7 +610,7 @@ pl8
 pl9
 ```
 
-From the residual plots of the LASSO model above, it looks like we can try to model all of these predictors with nonlinear relationships. This is because the plots show heteroskedasticity. 
+From the residual plots of the LASSO model above, we found that  we could try to model all of these predictors with nonlinear relationships. This is because the plots show heteroskedasticity. 
 
 
 We can look at the LASSO regression results to determine variable importance. LASSO is a shrinking algorithm which will eliminate weak predictors from the model by setting their coefficients to 0. From the estimate values of the coefficients, we can see that `total_deaths`, `people_vaccinated_per_hundred` and `total_boosters_per_hundred` have been shrunk to 0 and are not considered important variables in the model. 
@@ -602,9 +622,8 @@ However, the magnitude of the other coefficients produced by the LASSO algorithm
 <br>
 
 ### GAMS
-
-**Non linearity**
-```{r}
+After acknowledging the prevalence of nonlinearity and heteroskedasticity throughout our regression model selection process, we chose to fit a model that allows for non-linearity. In this section, we implement GAMs and splines to account for this. 
+```{r, appendix = TRUE}
 # GAMS
 
 gam_spec <- 
@@ -628,7 +647,7 @@ gam_mod %>% pluck('fit') %>% summary()
 gam_mod %>% pluck('fit') %>% plot( all.terms = TRUE, pages = 1)
 ```
 
-```{r}
+```{r, appendix = TRUE}
 #fitting a more simple GAM model by only allowing for a non-linear function if the edf is greater than 3.
 gam_mod2 <- fit(gam_spec,
     new_cases ~ s(total_cases) + s(total_deaths) + s(total_deaths) + s(reproduction_rate) + s(people_vaccinated_per_hundred) + people_fully_vaccinated_per_hundred + tests_per_case + icu_patients + s(positive_rate) + s(total_boosters_per_hundred),
@@ -640,7 +659,7 @@ gam_mod2 %>% pluck('fit') %>% plot()
 ``` 
 
 
-```{r}
+```{r, appendix = TRUE}
 
 lm_spec <-
   linear_reg() %>%
@@ -679,7 +698,7 @@ fit_resamples(
 
 ```
 
-```{r}
+```{r, appendix = TRUE}
 fit_resamples(
     spline_wf,
     resamples = data_cv8, # cv folds
@@ -687,7 +706,9 @@ fit_resamples(
 ) %>% collect_metrics()
 ```
 
-```{r, results='hide'}
+After recieving the GAM model results above, we examined the residuals as before, looking for systematic prediction errors and nonlinearity.
+
+```{r, results='hide', appendix = TRUE}
 # We print to compare to LASSO so hiding the print out of the individual plots
 
 ns_mod <- spline_wf %>%
@@ -738,7 +759,7 @@ p8
 p9
 ```
 
-```{r, fig.width = 4,fig.height = 1.5}
+```{r, fig.width = 4,fig.height = 1.5, appendix = TRUE}
 grid.arrange(pl1, p4, nrow = 1, ncol = 2)
 grid.arrange(pl2, p5, nrow = 1, ncol = 2)
 grid.arrange(pl3, p6, nrow = 1, ncol = 2)
@@ -749,17 +770,19 @@ grid.arrange(pl9, p9, nrow = 1, ncol = 2)
 
 ### Regression - Results
 
-Comparing between our LASSO model and nonlinear splines model, we see the inclusion of previously zeroed out variables including total deaths, people vaccinated per hundred, and people boosted per hundred. However, our most predictive variables are still the greatest in the model.  
+Comparing our LASSO model and nonlinear splines model, we see the inclusion of previously zeroed out variables including total deaths, people vaccinated per hundred, and people boosted per hundred. However, our most predictive variables are still the greatest in the model.  
 
 The GAM output plots reveal a handful of non-linear variables, especially total vaccinations per hundred, and total boosters per hundred. This demonstrates the value of fitting models allowing for non-linearity, as forcing linearity upon these would have resulted in a poor estimate. 
 
 Across all metrics, our GAM models perform somewhat better than those which assume non-linearity. We can see this in the lower MAE, lower RMSE, and slightly higher r-squared.
 
+In this final model, people fully vaccinated per hundred is notably included among the most predictive variables in general, and is significantly different as a nonlinear function.
+
 ### Regression - Conclusions
 
 Our analysis goal is to predict the quantity of new COVID cases. Given the universal salience of this subject, it is important to have both highly interpretable results as well as a quality predictive model. To attempt to explain the rate of new COVID cases, we have fit a series of least-squares linear regression models, as well as a series of models subjected to LASSO linear regression. Of our fit models, we find that the best-fit LASSO model has the lowest mean absolute error (MAE), therefore producing the most accurate prediction of our fit models. However, even this model results in a sizable MAE. To correct this, we must consider the non linearity of some input variables, and undertake steps to model them using polynomial regression. 
 
-We attempted to correct for nonlinearity through the implementation in splines, however these models had an even larger MAE. Therefore, we will continue using the last LASSO model. 
+We attempted to correct for nonlinearity through the implementation of splines, however these models had an even larger MAE. Therefore, we will continue using the last LASSO model. 
 
 
 It is important to remember that the reporting of these data has been done individually by each country, and therefore is incomplete and prone to some inconsistencies. Additionally, it is important to remember the people behind these data, both for context and in recognition of the lives lost. 
@@ -768,7 +791,7 @@ It is important to remember that the reporting of these data has been done indiv
 # Classification
 
 
-```{r}
+```{r, appendix = TRUE}
 # read in data
 covid <- read_csv("owid-covid-data.csv")
 
@@ -779,9 +802,7 @@ covid <- covid %>%
   na.omit(covid)
 ```
 
-- We're considering COVID cases occurring after the first recorded booster vaccines (13th August, 2021) to best capture today's landscape.  
-- This is when vaccinations started to become widespread (at least in the United States).
-- In addition to our existing variables, we also added the following to our model to predict the continent:
+As before, we're considering COVID cases occurring after the first recorded booster vaccines (13th August, 2021) to best capture today's landscape. This is when boosters started to become widespread, at least in the United States, and also saw the dawn of serious COVID variants. In addition to our existing variables, we also added the following to our model to predict the continent:
     - `life_expectancy`
     - `population_density`
     - `median_age`
@@ -790,19 +811,19 @@ covid <- covid %>%
 
 ## Classification - Methods
 
-We used logistic regression and random forests. These methods were employed to predict the origin continent of each case.
+As with our regression analysis we tried two models, logistic regression and random forests classification. These models were employed to predict the origin continent of each case. Ultimately, we chose random forests in large part because it can produce non-binary results. 
 
 ### LASSO Logistic Regression 
 
-We wil fit a LASSO logistic regression model for the `continent` outcome, and allow all possible predictors to be considered.
+We fit a LASSO logistic regression model for the `continent` outcome, and allowed all possible predictors to be considered.
 
-We initially try a sequence of 100 $\lambda$'s from 1 to 10, which we then adjust based on the plot of test AUC versus $\lambda$.
+We initially tried a sequence of 100 $\lambda$s from 1 to 10, which we then adjusted based on the plot of test AUC versus $\lambda$.
 
-Since we can only perform binominal logistic regression, we had to create a new variable, `NorthAmerica_or_Not`, categorizing the data based on whether its `continent` was "North America" or not. This new variable will be the outcome we try to predict using this method, setting the reference level as not North America.
+Since we can only perform binominal logistic regression, we had to create a new variable, `NorthAmerica_or_Not`, categorizing the data based on whether its `continent` was "North America" or not. This new variable will be the outcome we try to predict using this method, setting the reference level as not North America. This sort of classification may be important in a real life context for administrative health agencies to spot trends and disparities between North America, a historically powerful continent with the resources to implement and enforce COVID vaccinations, and other continents that struggle more to do so.
 
 To fit the model, we had to remove `date` and `continent` as predictors, since their formats did not work with the engine.
 
-```{r}
+```{r, appendix = TRUE}
 # Create new binary variable
 covid <-covid %>% 
   mutate(NorthAmerica_or_Not = ifelse(continent == 'North America', 'North_America', 'Not_North_America'))
@@ -851,9 +872,9 @@ autoplot(tune_output) + theme_classic()
 
 #### Inspecting the model 
 
-We will choose the final model whose CV AUC is within one standard error of the overall best metric. 
+We will select the final model possessing a CV AUC within one standard error of the overall best metric. 
 
-```{r}
+```{r, appendix = TRUE}
 # Select Penalty
 best_se_penalty <- select_by_one_std_err(tune_output, metric = 'roc_auc', desc(penalty)) # choose penalty value based on the largest penalty within 1 se of the highest CV roc_auc
 best_se_penalty
@@ -869,11 +890,11 @@ With the set of penalty values that we used, the following variables had their c
 - `total_cases`
 - `people_fully_vaccinated_per_hundred`
 
-Apparently, the total number of cases and number of people fully vaccinated per hundred were not that important in predicting whether or not an observation originated from North America or not, after accounting for the other features in the model.
+The total number of cases and number of people fully vaccinated per hundred were proven less important in predicting whether or not an observation originated from North America or not, after accounting for the other features in the model.
 
 Here we will look at how long a variable stayed in the model as a measure of variable importance:
 
-```{r}
+```{r, appendix = TRUE}
 glmnet_output <- final_fit_se %>% extract_fit_engine()
     
 # Create a boolean matrix (predictors x lambdas) of variable exclusion
@@ -897,13 +918,13 @@ var_imp_data %>% arrange(desc(var_imp))
 
 Based on the output above, the variables deemed the most important in predicting the continent based on how long they persisted in the LASSO algorithm as the penalty increased. 
 
-Surprisingly, `total_cases` and `people_fully_vaccinated_per_hundred` *are* important!
+unsurprisingly, `total_cases` and `people_fully_vaccinated_per_hundred` *are* important, though counter to initial results.
 
 #### Interpreting evaluation metrics
 
 We inspect the overall CV results for the "best" $\lambda$, and compute the no-information (NIR). 
 
-```{r}
+```{r, appendix = TRUE}
 # CV results for "best lambda"
 tune_output %>%
     collect_metrics() %>%
@@ -918,13 +939,13 @@ covid %>% count(NorthAmerica_or_Not) # Name of the outcome variable goes inside 
 
 The relative frequency of the majority class is 0.89, meaning 89% of our observations originate from outside of North America. 
 
-The AUC for our model is 1.0! Apparently, our model is a perfect classifier of whether or not a case originated from North America!
+The AUC for our model is 1.0, indicating that our model is a perfect classifier of whether or not a case originated from North America.
 
 #### Choosing a threshold and final model
 
 After using LASSO and balancing bias and variance, we use the final model to make predictions: 
 
-```{r}
+```{r, appendix = TRUE}
 # Soft Predictions on Training Data
 final_output <- final_fit_se %>% predict(new_data = covid, type='prob') %>% bind_cols(covid)
 
@@ -939,15 +960,15 @@ final_output %>%
     autoplot()
 ```
 
-This ROC curve is 1.0! Apparently, our model is a perfect classifier with sensitivity of 1. 
+This ROC curve is 1.0, indicating that our model is a perfect classifier with sensitivity of 1. 
 
-Sensitivity is the measure of how North-American continents are correctly predicted as North-American by our model. 
+Sensitivity is the measure of how North-American cases continents are correctly predicted as North-American by our model. 
 
-Specificity is measure of how often non-North-American continents are correctly predicted to be not North-America by our model. 
+Specificity is measure of how often non-North-American cases are correctly predicted to be not North-American by our model. 
 
 We can also calculate the J index:
 
-```{r}
+```{r, appendix = TRUE}
 # thresholds in terms of reference level
 threshold_output <- final_output %>%
     threshold_perf(truth = NorthAmerica_or_Not, estimate = .pred_North_America, thresholds = seq(0,1,by=.01)) 
@@ -961,13 +982,13 @@ threshold_output %>%
     theme_classic()
 ```
 
-```{r}
+```{r, appendix = TRUE}
 threshold_output %>%
     filter(.metric == 'j_index') %>%
     arrange(desc(.estimate))
 ```
 
-```{r}
+```{r, appendix = TRUE}
 # Distance v. threshold for not_North_America
 
 threshold_output %>%
@@ -978,13 +999,13 @@ threshold_output %>%
     theme_classic()
 ```
 
-```{r}
+```{r, appendix = TRUE}
 threshold_output %>%
     filter(.metric == 'distance') %>%
     arrange(.estimate)
 ```
 
-```{r}
+```{r, appendix = TRUE}
 log_metrics <- metric_set(accuracy,sens,yardstick::spec)
 
 final_output %>%
@@ -992,18 +1013,18 @@ final_output %>%
     log_metrics(truth = NorthAmerica_or_Not, estimate = .pred_class, event_level = 'second')
 ```
 
-95% of COVID case classifications into North America or not are expected to be correct under this model
+95% of COVID case classifications selecting North America or not are expected to be correct under this model.
 
-Our NIR is 88%, so our model performs better and is actually almost 100% accurate.However, most of our cases do not actually originate from North America.
+Our NIR is 88%, so our model performs better and is actually almost 100% accurate. However, most of our cases do not actually originate from North America.
 
 Our model classifies COVID cases as originating from North America or not correctly 95% of the time. The ROC AUC also has an output of 1.0, meaning our model performs perfect continent classification. 
 
-These results are outstanding at first glance because it seems like our model is able to classify COVID cases by continent almost perfectly. However, in context, it turns out that 89% of the observations in the data actually originate from outside North America. If we simply guessed picking the majority class each time, we would still make a right classification 89% of the time (following the No Information Rate). Our model performs marginally better than that, but is not so impressive in this context. 
+These results are outstanding at first glance because it seems like our model is able to classify COVID cases by continent almost perfectly. However, in context, it turns out that 89% of the observations in the data actually originate from outside North America. If we simply guessed picking the majority class each time, we would still make a right classification 89% of the time (following the No Information Rate). Our model performs marginally better than that, but is not particularly impressive in this context. 
 
 ### Random Forests
+Next, we implimented a random forest model.
 
-
-```{r}
+```{r, appendix = TRUE}
 conflicted::conflict_prefer("vi", "vip")
 
 # read in data
@@ -1011,7 +1032,7 @@ covid <- read_csv("owid-covid-data.csv")
 ```
 
 
-```{r}
+```{r, appendix = TRUE}
 # data cleaning
 covid <- covid %>%
   filter(date >= as.Date("2021-08-13"))%>%
@@ -1019,25 +1040,16 @@ covid <- covid %>%
 
 ```
 
-```{r}
+```{r, appendix = TRUE}
 covid <- covid %>%
   na.omit(covid) %>%
   filter(continent %in% c("North America", "Asia", "South America", "Africa", "Europe", "Oceania")) %>%
   mutate(continent = factor(continent))
 ```
-
-- We're considering COVID cases occurring after the first recorded booster vaccines (13th August, 2021) to best capture today's landscape.  
-- This is when vaccinations started to become widespread (at least in the United States).
-- In addition to our existing variables, we also added the following to our model to predict the continent:
-    - `life_expectancy`
-    - `population_density`
-    - `median_age`
-    - `gdp_per_capita`
-    
+We use the same set of predictors here as with our logistic regression model. 
 
 
-
-```{r}
+```{r, appendix = TRUE}
 # Bagging and Random Forest
 
 # Model Specification
@@ -1073,7 +1085,7 @@ data_wf_mtry44 <- workflow() %>%
   add_recipe(rf_rec)
 ```
 
-```{r}
+```{r, appendix = TRUE}
 # Fit Models
 
 set.seed(123) # make sure to run this before each fit so that you have the same 1000 trees
@@ -1089,7 +1101,7 @@ set.seed(123)
 data_fit_mtry44 <- fit(data_wf_mtry44, data = covid)
 ```
 
-```{r}
+```{r, appendix = TRUE}
 # Custom Function to get OOB predictions, true observed outcomes and add a model label
 rf_OOB_output <- function(fit_model, model_label, truth){
     tibble(
@@ -1103,7 +1115,7 @@ rf_OOB_output <- function(fit_model, model_label, truth){
 rf_OOB_output(data_fit_mtry2,'mtry2', covid %>% pull(continent))
 ```
 
-```{r}
+```{r, appendix = TRUE}
 # Evaluate OOB Metrics
 
 data_rf_OOB_output <- bind_rows(
@@ -1131,18 +1143,20 @@ data_rf_OOB_output %>%
   theme_classic()
 ```
 
-```{r}
+```{r, appendix = TRUE}
 # Evaluating the forest
 
 data_fit_mtry7
 ```
 
-```{r}
+```{r, appendix = TRUE}
 rf_OOB_output(data_fit_mtry7,'mtry7', covid %>% pull(continent)) %>%
     conf_mat(truth = continent, estimate= .pred_continent)
 ```
 
-```{r}
+Here, we can also see the relative importance of included variables, as determined by the forest. 
+
+```{r, appendix = TRUE}
 # Variable importance measures
 
 data_fit_mtry7 %>% 
@@ -1151,7 +1165,7 @@ data_fit_mtry7 %>%
 ```
 
 
-```{r}
+```{r, appendix = TRUE}
 data_wf_mtry7 %>% 
   update_model(rf_spec %>% set_args(importance = "permutation")) %>% #based on permutation
   fit(data = covid) %>% 
@@ -1159,7 +1173,9 @@ data_wf_mtry7 %>%
     vip(num_features = 30) + theme_classic()
 ```
 
-```{r}
+Further, we see how the value of these variables differ across continents, our outcome classes. 
+
+```{r, appendix = TRUE}
 
 ## pick important variables to visualize
 
@@ -1186,7 +1202,7 @@ ggplot(covid, aes(x = continent, y = new_deaths_smoothed)) +
 
 
 
-For the logistic regression, we inspected the overall cross-validation results to determine the best lambda. We also determined the no-information-rate (NIR), which was 89%, meaning in this case that 89% of our cases represented "false (non-North America)" values. We also used the ROC curve to plot sensitivity (rate of true positive, predicting North American cases and North American) and specificity (true negative rate, predicting non-North-American cases as non-North American) of the overall model. It returned an ROC of 1 with a standard deviation of 0, meaning it has essentially perfect prediction. Finally, we evaluated the model accuracy measure from our logistic quantitative output, which equaled .95, with a one standard deviation estimate of +-0.00137, suggesting strong 95% predictive accuracy. 
+For the logistic regression, we inspected the overall cross-validation results to determine the best lambda. We also determined the no-information-rate (NIR), which was 89%, meaning in this case that 89% of our cases represented "false (non-North America)" values. We also used the ROC curve to plot sensitivity (rate of true positive, predicting North American cases as North American) and specificity (true negative rate, predicting non-North-American cases as non-North American) of the overall model. It returned an ROC of 1 with a standard deviation of 0, meaning it has essentially perfect prediction. Finally, we evaluated the model accuracy measure from our logistic quantitative output, which equaled .95, with a one standard deviation estimate of +-0.00137, suggesting strong 95% predictive accuracy. 
 
 For the decision tree, we used out-of-bag error (OOB) and the test confusion matrix. Our OOB returned as .02%, meaning the our model makes the wrong hard classification .02% of the time, which in our test confusion matrix is shown to be one wrong prediction. This suggests that the tree model has a 99.98% accuracy, making it slightly more accurate than the logistic model. However, this difference is within 5% accuracy, suggesting that either model could offer high predictive power in this research context. 
 
@@ -1196,7 +1212,7 @@ For the decision tree, we used out-of-bag error (OOB) and the test confusion mat
 
 These models also differ by metrics and variable importance. In the logistic regression, total cases, people vaccinated per hundred, and ICU patients proved to be among the most important variables. This is in contrast to the random forest model, which finds population age to generally be the most important predictor of new COVID cases.
 
-We have selected the random forest model. This operates as a bagged decision tree, and can predict which continent each case is from. We selected this model for two reasons. First, and most importantly, this model can predict each content specifically, whereas the logistic model is restricted to a binary outcome of North America/Not North America. This a critical difference, as it allows for much more specific predictions within this data context. Secondly, this model has a slightly higher accuracy rating of 4.98%.
+We have selected the random forest model. This operates as a bagged decision tree, and can predict which continent each case is from. We selected this model for two reasons. First, and most importantly, this model can predict each content specifically, whereas the logistic model is restricted to a binary outcome of North America/Not North America. This a critical difference, as it allows for much more specific predictions within this data context. Secondly, this model has a slightly higher accuracy rating by 4.98%.
 
 
 
@@ -1210,7 +1226,7 @@ The model has an extremely low level of error, predicting results with 99.98% ac
 
 
 Here, we see that only one case has been incorrectly predicted in the training data, demonstrating the extreme predictive ability of this random forest model. 
-```{r}
+```{r, appendix = TRUE}
 rf_OOB_output(data_fit_mtry7,'mtry7', covid %>% pull(continent)) %>%
     conf_mat(truth = continent, estimate= .pred_continent)
 ```
@@ -1224,10 +1240,10 @@ Overall, this model predicts with almost flawless accuracy the continent that ea
 
 # K-means Clustering
 
-We chose k-means as our clustering algorithm over other methods like 1) Principal Component Analysis, because we had already ruled out so many variables from the data cleaning steps that would make further dimensional reduction pointless and 2) hierarchical clustering, because we had tried hierarchical clustering and making a dendrogram for it, however, it was nearly impossible to read with no clear trends in classification and was not as accurate as k-means clustering. 
+We chose K-means as our clustering algorithm over other methods including 1) Principal Component Analysis, because we had already eliminated so many variables during the data cleaning steps that further dimensional reduction would be unnecessary, and 2) hierarchical clustering, because when we attempted hierarchical clustering and constructed a dendrogram, it proved nearly impossible to read with no clear trends in classification. Also, it was not as accurate as k-means clustering. 
 
 
-```{r}
+```{r, appendix = TRUE}
 
 # Random subsample of 50 cases
 set.seed(123)
@@ -1241,16 +1257,16 @@ covid_sub <- covid %>%
   select(total_cases, people_fully_vaccinated_per_hundred)
 ```
 
-### Picking k
+### Picking K
 
-The **Elbow Method** is based on the visualization below. We pick the $k$ that corresponds to the bend in the curve (the "elbow") such that you are minimizing total within-cluster sum of squares while keeping the number of clusters small (simpler, more interpretable).
+The **Elbow Method** is based on the visualization below. We pick the $k$ that corresponds to the bend in the curve (the "elbow") such that you are minimizing total within-cluster sum of squares while keeping the number of clusters small for simplicity and interpretability.
 
 This enables us to pick $k$ using a data-driven approach. We would be comparing the **total squared distance of each case from its assigned centroid** for different values of $k$. (This measure is available within the `$tot.withinss` component of objects resulting from `kmeans()`.)
 
-Based on the visualization below, we pick $k = 6$. After this, there is not as much meaningful decrease in heterogeneity (dissimilarity).
+Based on the visualization below, we pick $k = 6$. After this, there is not a meaningful decrease in heterogeneity (dissimilarity).
 
-This makes a lot of sense because there are 6 continents where cases are observed in the data set.
-```{r}
+This is logical, as there are 6 continents where cases are observed in the data set.
+```{r, appendix = TRUE}
 # Data-specific function to cluster and calculate total within-cluster SS
 covid_cluster_ss <- function(k){
     # Perform clustering
@@ -1272,7 +1288,7 @@ tibble(
 
 ### Cluster interpretation
 
-```{r}
+```{r, appendix = TRUE}
 set.seed(123)
 kclust_k6_2vars <- kmeans(scale(covid_sub), centers = 6)
 
@@ -1292,7 +1308,7 @@ Group 3 has the highest mean total cases and the second lowest mean total vaccin
 
 ### Clustering Visualization
 
-```{r}
+```{r, appendix = TRUE}
 # Run k-means for k = centers = 6
 kclust_k6 <- kmeans(scale(covid_sub), centers = 6)
 
@@ -1307,14 +1323,21 @@ ggplot(covid_sub, aes(x = total_cases, y = people_fully_vaccinated_per_hundred, 
     theme_classic()
 ```
 
-### Clustering Evalution
+### Clustering Evaluation
 
 The two features we chose in the clustering were `total_cases` and `people_fully_vaccinated_per_hundred`. We chose these variables because the variable importance calculation from the LASSO logistic regression done previously picked these two variables as the most important. Additionally, the clustering can only be done for quantitative variables since we are able to measure the distance between them.
 
 It looks like there are 6 clusters with varying vaccination rate per hundred people and total number of cases.
 
-We decided to use k-means clustering to see if we could group the cases by geographical continent based on the similarity of the predictor values so that the distance between cases is minimized. Using an elbow plot, we noticed that the optimal number of clusters lies between k = 6 to k = 8 (the dip in the curve), after which there will not be any more meaningful decreases in heterogeneity. We chose k = 6 for our final clustering implementation, which is fitting since the cases from the COVID dataset originate from 6 continents. 
+We decided to use k-means clustering to see if we could group the cases by geographical continent based on the similarity of the predictor values so that the distance between cases is minimized. Using an elbow plot, we noticed that the optimal number of clusters lies between k = 6 to k = 8 (the dip in the curve), after which there would not have been any more meaningful decreases in heterogeneity. We chose k = 6 for our final clustering implementation, which is fitting since the cases from the COVID dataset originate from 6 continents. 
 
 From clustering, we gain the knowledge that using `total_cases` and `total_vaccinations_per_hundred` helps us cluster by continent, which informs us that these predictor values differ significantly enough between each continent to let us identify the continents. Interestingly, our analysis indicates that the number of people fully vaccinated per hundred doesn’t necessarily mean a decrease in the number of total cases - for example, compare cluster 2 and 6, where 6 is doing much better in terms of vaccination rate, but records a similar number of total cases. This could be due to external factors like globalization or populations who are vaccinated not continuing to wear masks. 
 
+# Conclusion
 
+In this research project, we have pursued three lines of query. First, we sought to explain daily new COVID cases post-vaccine booster, representing largely COVID variant cases given our examined time span. Second, we wanted to investigate the geographic variation of these trends by predicting the origin continent of recorded total case counts. Finally, we examined natural continent-level clustering of case patterns. In our first analysis, we underwent several regression techniques to construct a model which accounted for nonlinearity. We found total vaccination rate to be among the most important variables in predicting cases. This builds upon extensive scientific support for the efficacy of vaccines as a central tool in curbing the COVID-19 pandemic. In the second and third analyses, our models were able to predict and cluster, respectively, total case values into continents with almost perfect accuracy. While some shortcomings in the data—noted earlier—contribute to this high predictive ability, it suggests how COVID cases are still a phenomenon experienced unequally across continents. Together, these finding mandate that we continue to support the accessibility of vaccines, as well as remain aware of the international discrepancies in the pandemic. 
+
+## Appendix
+
+```{r, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
